@@ -1,8 +1,8 @@
-# tooling
+# 🛠️ Tooling
 
 Collection of all useful tooling i found throughout the time of developing software
 
-# Table of Contents
+# 📜Table of Contents
 
 - [Version Control](#version-control)
 - [Editors](#editors)
@@ -21,27 +21,27 @@ Collection of all useful tooling i found throughout the time of developing softw
 - [AWS Services](#aws-services)
 - [Other](#other)
 
-## [Version Control](#version-control)
+## 📂[Version Control](#version-control)
 
 - [Git](https://git-scm.com/) - Probably the most popular
   version Control System out there. It is the base for...
 - [GitHub](https://github.com) - The most popular Git hosting service. Made by microsoft.
 - [GitLab](https://gitlab.com) - Another great Git hosting service. Made by GitLab Inc.
 
-## [Editors](#editors)
+## ✒️[Editors](#editors)
 
 - [Visual Studio Code](https://code.visualstudio.com/) - A great editor made by Microsoft. It is highly customizable and has a great community.
 - [IntelliJ IDEA](https://www.jetbrains.com/idea/) - A great IDE for Java and other JVM languages. Made by JetBrains.
 - [Eclipse](https://www.eclipse.org/) - Another great IDE for Java and other JVM languages. Made by the Eclipse Foundation.
 
-## [Package Managers](#package-managers)
+## 🧑‍💼️[Package Managers](#package-managers)
 
 - [npm](https://www.npmjs.com/) - The package manager for JavaScript and the world’s largest software registry. Discover packages of reusable code — and assemble them in powerful new ways.
 - [yarn](https://yarnpkg.com/) - Fast, reliable, and secure dependency management.
 - [pip](https://pypi.org/project/pip/) - The PyPA recommended tool for installing Python packages.
 - [pnpm](https://pnpm.io/) - Fast, disk space efficient package manager.
 
-## [Deployment Tools](#deployment-tools)
+## 🏭[Deployment Tools](#deployment-tools)
 
 - [Docker](https://www.docker.com/) - Docker is an open platform for developing, shipping, and running applications. Docker enables you to separate your applications from your infrastructure so you can deliver software quickly.
 - [Docker Compose](https://docs.docker.com/compose/) - Compose is a tool for defining and running multi-container Docker applications. With Compose, you use a YAML file to configure your application's services.
@@ -53,7 +53,7 @@ Collection of all useful tooling i found throughout the time of developing softw
 - [Terragrunt](https://terragrunt.gruntwork.io/) - Terragrunt is a thin wrapper for Terraform that provides extra tools for working with multiple Terraform modules.
 - [Github Actions](https://github.com) - GitHub Actions makes it easy to automate all your software workflows with CI/CD. Build, test, and deploy your code right from GitHub. Make code reviews, branch management, and issue triaging work the way you want.
 
-## [Programming Languages](#programming-languages)
+## 🧑‍💻️[Programming Languages](#programming-languages)
 
 - [Javascript](https://developer.mozilla.org/en-US/docs/Web/JavaScript) - JavaScript is a scripting or programming language that allows you to implement complex features on web pages.
 - [Typescript](https://www.typescriptlang.org/) - TypeScript is a typed superset of JavaScript that compiles to plain JavaScript.
@@ -62,17 +62,17 @@ Collection of all useful tooling i found throughout the time of developing softw
 - [Python](https://www.python.org/) - Python is a programming language that lets you work quickly and integrate systems more effectively.
 - [Java](https://www.java.com/) - Java is a high-level, class-based, object-oriented programming language that is designed to have as few implementation dependencies as possible.
 
-## [Diagrams](#diagrams)
+## 🎨[Diagrams](#diagrams)
 
 - [draw.io](https://app.diagrams.net/) - draw.io is a free online diagram drawing application for workflow, BPM, org charts, UML, ER, network diagrams.
 - [Lucidchart](https://www.lucidchart.com/) - Lucidchart is your solution for visual communication and cross-platform collaboration. Create professional flowcharts, process maps, UML models, org charts, and ER diagrams using our templates or import feature. Works on Mac, PC, and Linux and integrated with your favorite apps. Start a free trial today!
 
-## [Notes](#notes)
+## 📋[Notes](#notes)
 
 - [Notion](https://www.notion.so/) - The all-in-one workspace for your notes, tasks, wikis, and databases.
 - [OneNote](https://www.onenote.com/) - Microsoft OneNote | The digital note-taking app for your devices.
 
-## [Communication](#communication)
+## 🗣[Communication](#communication)
 
 - [Slack](https://slack.com/) - Slack is a new way to communicate with your team. It’s faster, better organized, and more secure than email.
 - [Discord](https://discord.com/) - Discord is a voice, video and text communication service to talk and hang out with your friends and communities.
@@ -80,7 +80,7 @@ Collection of all useful tooling i found throughout the time of developing softw
 - [Teams](https://www.microsoft.com/en-us/microsoft-365/microsoft-teams/group-chat-software) - Microsoft Teams is a hub for teamwork in Microsoft 365 for Education. Keep all your content, apps, and conversations together in one place.
 - [RocketChat](https://rocket.chat/) - Rocket.Chat is free, unlimited and open source. Replace email, HipChat & Slack with the ultimate team chat software solution.
 
-## [Secret Management](#secret-management)
+## 🔐[Secret Management](#secret-management)
 
 - [Bitwarden](https://bitwarden.com/) - Bitwarden is the easiest and safest way to store all of your logins and passwords while conveniently keeping them synced between all of your devices.
 - [KeePass](https://keepass.info/) - OpenSource password manager standard for Windows, Linux, Mac OS X and mobile devices.
@@ -88,7 +88,7 @@ Collection of all useful tooling i found throughout the time of developing softw
 - [AWS Secrets Manager](https://aws.amazon.com/secrets-manager/) - AWS Secrets Manager helps you protect secrets needed to access your applications, services, and IT resources.
 - [AWS SSM Parameter Store](https://docs.aws.amazon.com/systems-manager/latest/userguide/systems-manager-parameter-store.html) - AWS Systems Manager Parameter Store provides secure, hierarchical storage for configuration data management and secrets management.
 
-## [Monitoring](#monitoring)
+## 📊[Monitoring](#monitoring)
 
 - [Prometheus](https://prometheus.io/) - Prometheus is an open-source systems monitoring and alerting toolkit originally built at SoundCloud.
 - [Grafana](https://grafana.com/) - Grafana is the open source analytics & monitoring solution for every database.
@@ -97,23 +97,23 @@ Collection of all useful tooling i found throughout the time of developing softw
 - [Pino Logger](https://github.com/pinojs/pino) - Pino is a very low overhead Node.js logger.
 - [Pino Pretty](https://github.com/pinojs/pino-pretty) - A pretty, streamable and lightweight pretty printer for pino log lines.
 
-## [Testing](#testing)
+## ⚗️[Testing](#testing)
 
 - [Jest](https://jestjs.io/) - Jest is a delightful JavaScript Testing Framework with a focus on simplicity.
 
-## [HTTP Clients](#http-clients)
+## 🌐[HTTP Clients](#http-clients)
 
 - [Postman](https://www.postman.com/) - Postman makes API development easy. Our platform offers the tools to simplify each step of the API building process and streamlines collaboration so you can create better APIs faster.
 - [Insomnia](https://insomnia.rest/) - Insomnia is a cross-platform GraphQL and REST client, available for Mac, Windows, and Linux.
 
-## Collaboration
+## 🧑‍🤝‍🧑[Collaboration](#collaboration)
 
 - [Miro](https://miro.com/) - Miro is an online collaborative whiteboard platform to bring teams together, anytime, anywhere.
 - [Jira](https://www.atlassian.com/software/jira) - Jira Software is an agile project management tool that supports any agile methodology, be it scrum, kanban, or your own unique flavor.
 - [Confluence](https://www.atlassian.com/software/confluence) - Confluence is a team workspace where knowledge and collaboration meet. Dynamic pages give your team a place to create, capture, and collaborate on any project or idea.
 - [Figma](https://www.figma.com/) - Figma is a vector graphics editor and prototyping tool which is primarily web-based, with additional offline features enabled by desktop applications for macOS and Windows.
 
-## [Cloud Providers](#cloud-providers)
+## ☁️[Cloud Providers](#cloud-providers)
 
 - [AWS](https://aws.amazon.com/) - Amazon Web Services offers reliable, scalable, and inexpensive cloud computing services. Free to join, pay only for what you use.
 - [Google Cloud](https://cloud.google.com/) - Google Cloud Platform lets you build, deploy, and scale applications, websites, and services on the same infrastructure as Google.
@@ -122,7 +122,7 @@ Collection of all useful tooling i found throughout the time of developing softw
 - [DataCrunch](https://datacrunch.io/) - DataCrunch is a cloud computing platform that provides a compute and storage environment for your data science and machine learning workloads.
 - [uberspace](https://uberspace.de/) - uberspace is a hosting provider that offers a simple and easy to use hosting platform for your websites and applications.
 
-### [AWS Services](#aws-services)
+### 🅰️[AWS Services](#aws-services)
 
 - [AWS Lambda](https://aws.amazon.com/lambda/) - AWS Lambda lets you run code without provisioning or managing servers. You pay only for the compute time you consume.
 - [AWS ECS](https://aws.amazon.com/ecs/) - Amazon Elastic Container Service (Amazon ECS) is a fully managed container orchestration service. Customers such as Duolingo, Samsung, GE, and Cookpad use ECS to run their most sensitive and mission critical applications because of its security, reliability, and scalability.
@@ -144,7 +144,7 @@ Collection of all useful tooling i found throughout the time of developing softw
 - [AWS Textract](https://aws.amazon.com/textract/) - Amazon Textract is a machine learning service that automatically extracts text and data from scanned documents.
 - [AWS VPC](https://aws.amazon.com/vpc/) - Amazon Virtual Private Cloud (Amazon VPC) enables you to launch AWS resources into a virtual network that you've defined.
 
-## [Other](#other)
+## 🤹[Other](#other)
 
 - [Gitmoji](https://gitmoji.dev/) - An emoji guide for your commit messages.
 - [Cat as a Service](https://cataas.com/) - Cat as a Service (CATAAS) provides a REST API to spread peace and love (or not) thanks to cats.
@@ -152,3 +152,5 @@ Collection of all useful tooling i found throughout the time of developing softw
 - [DeepL](https://www.deepl.com/) - DeepL trains artificial intelligence to understand and translate texts.
 - [ChatQPT](https://chatqpt.com/) - ChatQPT is a free online chat room that allows you to meet with people from all over the world.
 - [Artifact Hub](https://artifacthub.io/) - Artifact Hub is a web-based application that enables finding, installing, and publishing packages and configurations for CNCF projects.
+- [Emoji Finder](https://emojifinder.com/) - Emoji Finder helps you to find and copy emojis to any device.
+- [Emoji List](https://getemoji.com/) - Emoji List helps you to find and copy emojis to any device.
