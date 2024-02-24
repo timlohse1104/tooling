@@ -4,6 +4,7 @@ Collection of all useful tooling i found throughout the time of developing softw
 
 # 📜Table of Contents
 
+- [🔥Spotlight](#spotlight)
 - [Version Control](#version-control)
 - [Editors](#editors)
 - [Package Managers](#package-managers)
@@ -19,7 +20,12 @@ Collection of all useful tooling i found throughout the time of developing softw
 - [Collaboration](#collaboration)
 - [Cloud Providers](#cloud-providers)
 - [AWS Services](#aws-services)
+- [Home Network](#home-network)
 - [Other](#other)
+
+## 🔥[Spotlight](#spotlight)
+
+- [Memorandum](https://tilloh.dev/memorandum) - A little bit biased but i honestly think and my colleagues also told me that my own tool is great for organizing links in folders and for keeping them across different devices.
 
 ## 📂[Version Control](#version-control)
 
@@ -143,6 +149,15 @@ Collection of all useful tooling i found throughout the time of developing softw
 - [AWS SSM](https://aws.amazon.com/systems-manager/) - AWS Systems Manager gives you visibility and control of your infrastructure on AWS.
 - [AWS Textract](https://aws.amazon.com/textract/) - Amazon Textract is a machine learning service that automatically extracts text and data from scanned documents.
 - [AWS VPC](https://aws.amazon.com/vpc/) - Amazon Virtual Private Cloud (Amazon VPC) enables you to launch AWS resources into a virtual network that you've defined.
+
+## 🌐[Home Network](#home-network)
+
+- [pi.hole](https://pi-hole.net/) - Network-wide ad blocking via your own Linux hardware.
+- [Plex](https://www.plex.tv/) - Personal collection of movies, series and music.
+- [Playit.gg](https://playit.gg/) - Playit.gg is a free service that allows you to play your local multiplayer games online.
+- [Ngrok](https://ngrok.com/) - Secure introspectable tunnels to localhost.
+- [Localtunnel](https://github.com/localtunnel/localtunnel) - Localtunnel allows you to easily share a web service on your local development machine without messing with DNS and firewall settings.
+- [Nextcloud](https://nextcloud.com/) - Nextcloud is the most deployed on-premises file share and collaboration platform. Access & collaborate across your devices.
 
 ## 🤹[Other](#other)
 
