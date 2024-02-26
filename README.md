@@ -1,6 +1,6 @@
 # 🛠️ Tooling
 
-Collection of all useful tooling i found throughout the time of developing software
+Collection of all useful tooling i found throughout the time of developing software.
 
 # 📜Table of Contents
 
@@ -21,6 +21,7 @@ Collection of all useful tooling i found throughout the time of developing softw
 - [Cloud Providers](#cloud-providers)
 - [AWS Services](#aws-services)
 - [Home Network](#home-network)
+- [Bashrc Backup](./bashrc-backup/README.md)
 - [Other](#other)
 
 ## 🔥[Spotlight](#spotlight)
