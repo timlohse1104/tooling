@@ -5,6 +5,7 @@ Collection of all useful tooling i found throughout the time of developing softw
 # 📜Table of Contents
 
 - [🔥Spotlight](#spotlight)
+- [APIs](#apis)
 - [Version Control](#version-control)
 - [Editors](#editors)
 - [Package Managers](#package-managers)
@@ -27,6 +28,10 @@ Collection of all useful tooling i found throughout the time of developing softw
 ## 🔥[Spotlight](#spotlight)
 
 - [Memorandum](https://tilloh.dev/memorandum) - A little bit biased but i honestly think and my colleagues also told me that my own tool is great for organizing links in folders and for keeping them across different devices.
+
+## 🔗[APIs](#apis)
+
+- [WitzAPI](https://witzapi.de/) - Great multi-language Joke API for a good mood.
 
 ## 📂[Version Control](#version-control)
 
