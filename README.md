@@ -4,6 +4,7 @@ Collection of all useful tooling i found throughout the time of developing softw
 
 # 📜Table of Contents
 
+<<<<<<< Updated upstream
 - [🔥Spotlight](#spotlight)
 - [APIs](#apis)
 - [Version Control](#version-control)
@@ -24,6 +25,28 @@ Collection of all useful tooling i found throughout the time of developing softw
 - [Home Network](#home-network)
 - [Bashrc Backup](./bashrc-backup/README.md)
 - [Other](#other)
+=======
+- [🛠️ Tooling](#️-tooling)
+- [📜Table of Contents](#table-of-contents)
+  - [🔥Spotlight](#spotlight)
+  - [📂Version Control](#version-control)
+  - [✒️Editors](#️editors)
+  - [🧑‍💼️Package Managers](#️package-managers)
+  - [🏭Deployment Tools](#deployment-tools)
+  - [🧑‍💻️Programming Languages](#️programming-languages)
+  - [🎨Diagrams](#diagrams)
+  - [📋Notes](#notes)
+  - [🗣Communication](#communication)
+  - [🔐Secret Management](#secret-management)
+  - [📊Monitoring](#monitoring)
+  - [⚗️Testing](#️testing)
+  - [🌐HTTP Clients](#http-clients)
+  - [🧑‍🤝‍🧑Collaboration](#collaboration)
+  - [☁️Cloud Providers](#️cloud-providers)
+    - [🅰️AWS Services](#️aws-services)
+  - [🌐Home Network](#home-network)
+  - [🤹Other](#other)
+>>>>>>> Stashed changes
 
 ## 🔥[Spotlight](#spotlight)
 
@@ -78,6 +101,7 @@ Collection of all useful tooling i found throughout the time of developing softw
 
 - [draw.io](https://app.diagrams.net/) - draw.io is a free online diagram drawing application for workflow, BPM, org charts, UML, ER, network diagrams.
 - [Lucidchart](https://www.lucidchart.com/) - Lucidchart is your solution for visual communication and cross-platform collaboration. Create professional flowcharts, process maps, UML models, org charts, and ER diagrams using our templates or import feature. Works on Mac, PC, and Linux and integrated with your favorite apps. Start a free trial today!
+- [mermaid.js](https://mermaid.js.org/intro/getting-started.html) - Markdownish syntax for generating flowcharts, sequence diagrams, class diagrams, gantt charts and git graphs.
 
 ## 📋[Notes](#notes)
 
@@ -164,6 +188,7 @@ Collection of all useful tooling i found throughout the time of developing softw
 - [Ngrok](https://ngrok.com/) - Secure introspectable tunnels to localhost.
 - [Localtunnel](https://github.com/localtunnel/localtunnel) - Localtunnel allows you to easily share a web service on your local development machine without messing with DNS and firewall settings.
 - [Nextcloud](https://nextcloud.com/) - Nextcloud is the most deployed on-premises file share and collaboration platform. Access & collaborate across your devices.
+- [CasaOS](https://casaos.io/) - CasaOS is a smart home operating system that runs on a Raspberry Pi. It is designed to be simple to use and easy to extend.
 
 ## 🤹[Other](#other)
 
