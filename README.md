@@ -4,7 +4,6 @@ Collection of all useful tooling i found throughout the time of developing softw
 
 # 📜Table of Contents
 
-<<<<<<< Updated upstream
 - [🔥Spotlight](#spotlight)
 - [APIs](#apis)
 - [Version Control](#version-control)
@@ -75,6 +74,7 @@ Collection of all useful tooling i found throughout the time of developing softw
 - [yarn](https://yarnpkg.com/) - Fast, reliable, and secure dependency management.
 - [pip](https://pypi.org/project/pip/) - The PyPA recommended tool for installing Python packages.
 - [pnpm](https://pnpm.io/) - Fast, disk space efficient package manager.
+- [Deno](https://deno.com) - Alternative for Node and Typescript runtime.
 
 ## 🏭[Deployment Tools](#deployment-tools)
 
