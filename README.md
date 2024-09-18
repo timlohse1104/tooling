@@ -5,47 +5,24 @@ Collection of all useful tooling i found throughout the time of developing softw
 # 📜Table of Contents
 
 - [🔥Spotlight](#spotlight)
-- [APIs](#apis)
-- [Version Control](#version-control)
-- [Editors](#editors)
-- [Package Managers](#package-managers)
-- [Deployment Tools](#deployment-tools)
-- [Programming Languages](#programming-languages)
-- [Diagrams](#diagrams)
-- [Notes](#notes)
-- [Communication](#communication)
-- [Secret Management](#secret-management)
-- [Monitoring](#monitoring)
-- [Testing](#testing)
-- [HTTP Clients](#http-clients)
-- [Collaboration](#collaboration)
-- [Cloud Providers](#cloud-providers)
-- [AWS Services](#aws-services)
-- [Home Network](#home-network)
-- [Bashrc Backup](./bashrc-backup/README.md)
-- [Other](#other)
-=======
-- [🛠️ Tooling](#️-tooling)
-- [📜Table of Contents](#table-of-contents)
-  - [🔥Spotlight](#spotlight)
-  - [📂Version Control](#version-control)
-  - [✒️Editors](#️editors)
-  - [🧑‍💼️Package Managers](#️package-managers)
-  - [🏭Deployment Tools](#deployment-tools)
-  - [🧑‍💻️Programming Languages](#️programming-languages)
-  - [🎨Diagrams](#diagrams)
-  - [📋Notes](#notes)
-  - [🗣Communication](#communication)
-  - [🔐Secret Management](#secret-management)
-  - [📊Monitoring](#monitoring)
-  - [⚗️Testing](#️testing)
-  - [🌐HTTP Clients](#http-clients)
-  - [🧑‍🤝‍🧑Collaboration](#collaboration)
-  - [☁️Cloud Providers](#️cloud-providers)
-    - [🅰️AWS Services](#️aws-services)
-  - [🌐Home Network](#home-network)
-  - [🤹Other](#other)
->>>>>>> Stashed changes
+- [🔗APIs](#apis)
+- [📂Version Control](#version-control)
+- [✒️Editors](#️editors)
+- [🧑‍💼️Package Managers](#️package-managers)
+- [🏭Deployment Tools](#deployment-tools)
+- [🧑‍💻️Programming Languages](#️programming-languages)
+- [🎨Diagrams](#diagrams)
+- [📋Notes](#notes)
+- [🗣Communication](#communication)
+- [🔐Secret Management](#secret-management)
+- [📊Monitoring](#monitoring)
+- [⚗️Testing](#️testing)
+- [🌐HTTP Clients](#http-clients)
+- [🧑‍🤝‍🧑Collaboration](#collaboration)
+- [☁️Cloud Providers](#️cloud-providers)
+  - [🅰️AWS Services](#️aws-services)
+- [🌐Home Network](#home-network)
+- [🤹Other](#other)
 
 ## 🔥[Spotlight](#spotlight)
 
@@ -87,6 +64,9 @@ Collection of all useful tooling i found throughout the time of developing softw
 - [Terraform](https://www.terraform.io/) - Terraform enables you to safely and predictably create, change, and improve infrastructure. It is an open source tool that codifies APIs into declarative configuration files that can be shared amongst team members, treated as code, edited, reviewed, and versioned.
 - [Terragrunt](https://terragrunt.gruntwork.io/) - Terragrunt is a thin wrapper for Terraform that provides extra tools for working with multiple Terraform modules.
 - [Github Actions](https://github.com) - GitHub Actions makes it easy to automate all your software workflows with CI/CD. Build, test, and deploy your code right from GitHub. Make code reviews, branch management, and issue triaging work the way you want.
+- [Bash Autocompletion](https://www.cyberciti.biz/faq/add-bash-auto-completion-in-ubuntu-linux/) - Bash cli autocompletion is a great way to access possible commands using tab key.
+- [Kubectl Autocompletion](https://kubernetes.io/docs/tasks/tools/install-kubectl-linux/#enable-shell-autocompletion) - Kubectl autocompletion is a great way to access possible commands using tab key.
+- [Npm Autocompletion](https://docs.npmjs.com/cli/v8/commands/npm-completion) - Npm autocompletion is a great way to access possible commands using tab key.
 
 ## 🧑‍💻️[Programming Languages](#programming-languages)
 
