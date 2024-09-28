@@ -4,25 +4,27 @@ Collection of all useful tooling i found throughout the time of developing softw
 
 # 📜Table of Contents
 
-- [🔥Spotlight](#spotlight)
-- [🔗APIs](#apis)
-- [📂Version Control](#version-control)
-- [✒️Editors](#️editors)
-- [🧑‍💼️Package Managers](#️package-managers)
-- [🏭Deployment Tools](#deployment-tools)
-- [🧑‍💻️Programming Languages](#️programming-languages)
-- [🎨Diagrams](#diagrams)
-- [📋Notes](#notes)
-- [🗣Communication](#communication)
-- [🔐Secret Management](#secret-management)
-- [📊Monitoring](#monitoring)
-- [⚗️Testing](#️testing)
-- [🌐HTTP Clients](#http-clients)
-- [🧑‍🤝‍🧑Collaboration](#collaboration)
-- [☁️Cloud Providers](#️cloud-providers)
-  - [🅰️AWS Services](#️aws-services)
-- [🌐Home Network](#home-network)
-- [🤹Other](#other)
+- [🛠️ Tooling](#️-tooling)
+- [📜Table of Contents](#table-of-contents)
+  - [🔥Spotlight](#spotlight)
+  - [🔗APIs](#apis)
+  - [📂Version Control](#version-control)
+  - [✒️Editors](#️editors)
+  - [🧑‍💼️Package Managers](#️package-managers)
+  - [🏭Deployment Tools](#deployment-tools)
+  - [🧑‍💻️Programming Languages](#️programming-languages)
+  - [🎨Diagrams](#diagrams)
+  - [📋Notes](#notes)
+  - [🗣Communication](#communication)
+  - [🔐Secret Management](#secret-management)
+  - [📊Monitoring](#monitoring)
+  - [⚗️Testing](#️testing)
+  - [🌐HTTP Clients](#http-clients)
+  - [🧑‍🤝‍🧑Collaboration](#collaboration)
+  - [☁️Cloud Providers](#️cloud-providers)
+    - [🅰️AWS Services](#️aws-services)
+  - [🌐Home Network](#home-network)
+  - [🤹Other](#other)
 
 ## 🔥[Spotlight](#spotlight)
 
@@ -67,6 +69,7 @@ Collection of all useful tooling i found throughout the time of developing softw
 - [Bash Autocompletion](https://www.cyberciti.biz/faq/add-bash-auto-completion-in-ubuntu-linux/) - Bash cli autocompletion is a great way to access possible commands using tab key.
 - [Kubectl Autocompletion](https://kubernetes.io/docs/tasks/tools/install-kubectl-linux/#enable-shell-autocompletion) - Kubectl autocompletion is a great way to access possible commands using tab key.
 - [Npm Autocompletion](https://docs.npmjs.com/cli/v8/commands/npm-completion) - Npm autocompletion is a great way to access possible commands using tab key.
+- [Github Actions Release Drafter](https://github.com/marketplace/actions/release-drafter) - A GitHub Action for creating draft releases on pull request merge in main branch.
 
 ## 🧑‍💻️[Programming Languages](#programming-languages)
 
