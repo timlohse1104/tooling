@@ -17,6 +17,7 @@ Collection of all useful tooling i found throughout the time of developing softw
   - [📋Notes](#notes)
   - [🗣Communication](#communication)
   - [🔐Secret Management](#secret-management)
+  - [🛂2FA-Authenticators](#2fa-authenticators)
   - [📊Monitoring](#monitoring)
   - [⚗️Testing](#️testing)
   - [🌐HTTP Clients](#http-clients)
@@ -107,6 +108,11 @@ Collection of all useful tooling i found throughout the time of developing softw
 - [AWS Secrets Manager](https://aws.amazon.com/secrets-manager/) - AWS Secrets Manager helps you protect secrets needed to access your applications, services, and IT resources.
 - [AWS SSM Parameter Store](https://docs.aws.amazon.com/systems-manager/latest/userguide/systems-manager-parameter-store.html) - AWS Systems Manager Parameter Store provides secure, hierarchical storage for configuration data management and secrets management.
 
+## 🛂[2FA-Authenticators](#2fa-authenticators)
+
+- [Google Authenticator](https://play.google.com/store/apps/details?id=com.google.android.apps.authenticator2&hl=de&pli=1) - Authenticator by Google.
+- [Authy](https://www.authy.com/) - Free Authenticator with multi-platform support.
+
 ## 📊[Monitoring](#monitoring)
 
 - [Prometheus](https://prometheus.io/) - Prometheus is an open-source systems monitoring and alerting toolkit originally built at SoundCloud.
@@ -172,6 +178,7 @@ Collection of all useful tooling i found throughout the time of developing softw
 - [Localtunnel](https://github.com/localtunnel/localtunnel) - Localtunnel allows you to easily share a web service on your local development machine without messing with DNS and firewall settings.
 - [Nextcloud](https://nextcloud.com/) - Nextcloud is the most deployed on-premises file share and collaboration platform. Access & collaborate across your devices.
 - [CasaOS](https://casaos.io/) - CasaOS is a smart home operating system that runs on a Raspberry Pi. It is designed to be simple to use and easy to extend.
+- [Home Assistant](https://www.home-assistant.io/) - Homelab and smart home device control center.
 
 ## 🤹[Other](#other)
 
