@@ -29,7 +29,7 @@ Collection of all useful tooling i found throughout the time of developing softw
 
 ## 🔥[Spotlight](#spotlight)
 
-- [Memorandum](https://tilloh.dev/memorandum) - A little bit biased but i honestly think and my colleagues also told me that my own tool is great for organizing links in folders and for keeping them across different devices.
+- [tilloh.dev](https://tilloh.dev) - My personal website contains a range of tools. Memorandum is great for organizing links in folders and for keeping them across different devices. It also provides daily jokes.
 
 ## 🔗[APIs](#apis)
 
