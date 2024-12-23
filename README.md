@@ -25,6 +25,7 @@ Collection of all useful tooling i found throughout the time of developing softw
   - [☁️Cloud Providers](#️cloud-providers)
     - [🅰️AWS Services](#️aws-services)
   - [🌐Home Network](#home-network)
+  - [👐Open Source](#open-source)
   - [🤹Other](#other)
 
 ## 🔥[Spotlight](#spotlight)
@@ -180,6 +181,12 @@ Collection of all useful tooling i found throughout the time of developing softw
 - [CasaOS](https://casaos.io/) - CasaOS is a smart home operating system that runs on a Raspberry Pi. It is designed to be simple to use and easy to extend.
 - [Home Assistant](https://www.home-assistant.io/) - Homelab and smart home device control center.
 
+## 👐[Open Source](#open-source)
+
+- [CookieConsent](https://github.com/osano/cookieconsent) - Javascript open source cookie consent implementation.
+- [WebLLM](https://github.com/mlc-ai/web-llm) - Javascript open source library for running LLMs in the browser.
+- [WebStableDiffusion](https://github.com/mlc-ai/web-stable-diffusion) - Javascript open source library for running Stable Diffusion models in the browser.
+
 ## 🤹[Other](#other)
 
 - [Gitmoji](https://gitmoji.dev/) - An emoji guide for your commit messages.
@@ -190,6 +197,3 @@ Collection of all useful tooling i found throughout the time of developing softw
 - [Artifact Hub](https://artifacthub.io/) - Artifact Hub is a web-based application that enables finding, installing, and publishing packages and configurations for CNCF projects.
 - [Emoji Finder](https://emojifinder.com/) - Emoji Finder helps you to find and copy emojis to any device.
 - [Emoji List](https://getemoji.com/) - Emoji List helps you to find and copy emojis to any device.
-- [CookieConsent](https://github.com/osano/cookieconsent) - Javascript open source cookie consent implementation.
-- [WebLLM](https://github.com/mlc-ai/web-llm) - Javascript open source library for running LLMs in the browser.
-- [WebStableDiffusion](https://github.com/mlc-ai/web-stable-diffusion) - Javascript open source library for running Stable Diffusion models in the browser.
