@@ -190,3 +190,6 @@ Collection of all useful tooling i found throughout the time of developing softw
 - [Artifact Hub](https://artifacthub.io/) - Artifact Hub is a web-based application that enables finding, installing, and publishing packages and configurations for CNCF projects.
 - [Emoji Finder](https://emojifinder.com/) - Emoji Finder helps you to find and copy emojis to any device.
 - [Emoji List](https://getemoji.com/) - Emoji List helps you to find and copy emojis to any device.
+- [CookieConsent](https://github.com/osano/cookieconsent) - Javascript open source cookie consent implementation.
+- [WebLLM](https://github.com/mlc-ai/web-llm) - Javascript open source library for running LLMs in the browser.
+- [WebStableDiffusion](https://github.com/mlc-ai/web-stable-diffusion) - Javascript open source library for running Stable Diffusion models in the browser.
