@@ -197,3 +197,4 @@ Collection of all useful tooling i found throughout the time of developing softw
 - [Artifact Hub](https://artifacthub.io/) - Artifact Hub is a web-based application that enables finding, installing, and publishing packages and configurations for CNCF projects.
 - [Emoji Finder](https://emojifinder.com/) - Emoji Finder helps you to find and copy emojis to any device.
 - [Emoji List](https://getemoji.com/) - Emoji List helps you to find and copy emojis to any device.
+- [Paddle](https://www.paddle.com/) - Payments Provider ans global tax management tool for software products.
