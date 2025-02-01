@@ -26,6 +26,7 @@ Collection of all useful tooling i found throughout the time of developing softw
     - [🅰️AWS Services](#️aws-services)
   - [🌐Home Network](#home-network)
   - [👐Open Source](#open-source)
+  - [🤖AI Tools](#ai-tools)
   - [🤹Other](#other)
 
 ## 🔥[Spotlight](#spotlight)
@@ -187,13 +188,17 @@ Collection of all useful tooling i found throughout the time of developing softw
 - [WebLLM](https://github.com/mlc-ai/web-llm) - Javascript open source library for running LLMs in the browser.
 - [WebStableDiffusion](https://github.com/mlc-ai/web-stable-diffusion) - Javascript open source library for running Stable Diffusion models in the browser.
 
+## 🤖[AI Tools](#ai-tools)
+
+- [ChatQPT](https://chatqpt.com/) - ChatQPT is a free online chat room that allows you to meet with people from all over the world.
+- [Deepseek](https://chat.deepseek.com/) - Biggest OpenAI competitor. Provider of AI-powerd chat service from china.
+- [DeepL](https://www.deepl.com/) - DeepL trains artificial intelligence to understand and translate texts.
+
 ## 🤹[Other](#other)
 
 - [Gitmoji](https://gitmoji.dev/) - An emoji guide for your commit messages.
 - [Cat as a Service](https://cataas.com/) - Cat as a Service (CATAAS) provides a REST API to spread peace and love (or not) thanks to cats.
 - [JSON Placeholder](https://jsonplaceholder.typicode.com/) - JSONPlaceholder is a free online REST API that you can use whenever you need some fake data.
-- [DeepL](https://www.deepl.com/) - DeepL trains artificial intelligence to understand and translate texts.
-- [ChatQPT](https://chatqpt.com/) - ChatQPT is a free online chat room that allows you to meet with people from all over the world.
 - [Artifact Hub](https://artifacthub.io/) - Artifact Hub is a web-based application that enables finding, installing, and publishing packages and configurations for CNCF projects.
 - [Emoji Finder](https://emojifinder.com/) - Emoji Finder helps you to find and copy emojis to any device.
 - [Emoji List](https://getemoji.com/) - Emoji List helps you to find and copy emojis to any device.
