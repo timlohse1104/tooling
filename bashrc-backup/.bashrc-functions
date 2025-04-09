@@ -1,0 +1,143 @@
+# Colors
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[0;33m'
+BLUE='\033[0;34m'
+MAGENTA='\033[0;35m'
+CYAN='\033[0;36m'
+BLACK='\033[0;37m'
+NC='\033[0m'
+
+# Styles
+BOLD='\033[1m'
+UNDERLINE='\033[4m'
+BLINK='\033[5m'
+
+# Helpers
+check_args() {
+    local expected_amount=$1
+    shift
+    local usage=$1
+    shift
+    local example=$1
+    shift
+
+    if [ "$#" -ne "$expected_amount" ]; then
+        echo -e "${RED}${BOLD}[Error]${NC} ${YELLOW}Incorrect number of arguments.${NC}"
+        echo -e "${BLUE}[Usage]${NC} ${CYAN}$usage${NC}"
+        echo -e "${BLUE}[Example]${NC} ${GREEN}$example${NC}"
+        return 1
+    fi
+}
+
+# Serve a pod with pino pretty
+function serve() {
+        check_args 2 "serve <pod>" "serve my-service -H" "$@" || return $?
+        nx serve $1 | npx pino-pretty $2
+}
+
+# Kubectl exec into a pod
+function kex() {
+        check_args 1 "kex <pod>" "kex my-service" "$@" || return $?
+        kubectl exec -it $1 -- sh
+}
+function kexcp() {
+        check_args 1 "kexcp <pod>" "kexcp my-service" "$@" || return $?
+        kubectl exec -it $1 -n c4 -- sh
+}
+function kexap() {
+        check_args 1 "kexap <pod>" "kexap my-service" "$@" || return $?
+        kubectl exec -it $1 -n alfresco -- sh
+}
+function kexp() {
+        check_args 1 "kexp <pod>" "kexp my-service" "$@" || return $?
+        kubectl exec -it $1 -n dev-test -- sh
+}
+function kexgp() {
+        check_args 1 "kexgp <pod>" "kexgp my-service" "$@" || return $?
+        kubectl exec -it $1 -n dev-fgebhard -- sh
+}
+function kexmp() {
+        check_args 1 "kexmp <pod>" "kexmp my-service" "$@" || return $?
+        kubectl exec -it $1 -n monitoring -- sh
+}
+
+# Kubectl logs for a pod with pino pretty
+function klp() {
+        check_args 2 "klp <pod>" "klp my-service -H" "$@" || return $?
+        kubectl logs $1 | npx pino-pretty $2
+}
+#   $1 pod name, $2 pino-pretty options like -H
+function klcp() {
+        check_args 2 "klcp <pod>" "klcp my-service -H" "$@" || return $?
+        kubectl logs $1 -n c4 | npx pino-pretty $2
+}
+function klap() {
+        check_args 2 "klap <pod>" "klap my-service -H" "$@" || return $?
+        kubectl logs $1 -n alfresco | npx pino-pretty $2
+}
+function klp() {
+        check_args 2 "klp <pod>" "klp my-service -H" "$@" || return $?
+        kubectl logs $1 -n dev-test | npx pino-pretty $2
+}
+function klgp() {
+        check_args 2 "klgp <pod>" "klgp my-service -H" "$@" || return $?
+        kubectl logs $1 -n dev-fgebhard | npx pino-pretty $2
+}
+function klmp() {
+        check_args 2 "klmp <pod>" "klmp my-service -H" "$@" || return $?
+        kubectl logs $1 -n monitoring | npx pino-pretty $2
+}
+
+# restart all deployments / statefulsets
+function restarting() {
+        check_args 2 "restarting <statefulsets/deployments> <namespace>" "restarting statefulset monitoring" "$@" || return $?
+
+        local type="$1"
+        local namespace="$2"
+
+        entities=$(kubectl get "$type" -n "$namespace" --no-headers -o custom-columns=":metadata.name" | grep '^c4-.*-backend$')
+        if [ -z "$entities" ]; then
+                echo "No '$type' found for namespace '$namespace'."
+                return 1
+        fi
+
+        for entity in $entities; do
+                echo -e "\nRestart '$type' '$entity' in namespace '$namespace'"
+                kubectl rollout restart "$type" "$entity" -n "$namespace"
+                kubectl rollout status "$type" "$entity" -n "$namespace"
+        done
+}
+
+# Deleting pods with status in a namespace
+delete_with_status() {
+        check_args 2 "delete_unknowns <status> <namespace>" "delete_unknowns ContainerStatusUnknown monitoring" "$@" || return $?
+
+        local namespace="$1"
+
+        kubectl get pods -n "$namespace" -o jsonpath='{range .items[?(@.status.containerStatuses[*].state.terminated.reason=="ContainerStatusUnknown")]}{.metadata.name}{"\n"}{end}' | while read -r pod; do
+                if [ -n "$pod" ]; then
+                        echo "Pod to be deleted: $pod"
+                        kubectl delete pod "$pod" -n "$namespace"
+                        if [ $? -eq 0 ]; then
+                                echo "Pod successfully deleted: $pod"
+                        else
+                                echo "Error while deleting pod: $pod"
+                        fi
+                fi
+        done
+}
+
+# Watching alias commands
+watching() {
+    check_args 1 "watching <bashrc_alias>" "watching kgc" "$@" || return $?
+
+    alias_command=$(alias "$1" | sed "s/^alias $1='//;s/'.*$//")
+
+    if [ -z "$alias_command" ]; then
+        echo "Alias '$1' not found in .bashrc!"
+        return 1
+    fi
+
+    watch "$alias_command"
+}

@@ -1,0 +1,86 @@
+# general
+alias c=clear
+alias k=kubectl
+alias h=history
+
+# git
+alias g='git'
+alias gs='git status'
+alias gp1='git pull'
+alias gac='git add . && git commit -m'
+alias gp2='git push'
+alias gcob='git switch -c'
+alias gl='git log --graph --abbrev-commit --decorate --format=format:"%C(bold blue)%h%C(reset) - %C(bold green)(%ar)%C(reset) %C(white)%s%C(reset) %C(dim white)- %an%C(reset)%C(bold yellow)%d%C(reset)" --all'
+
+# k8s
+alias whereami='kubectx'
+alias goprod='kubectx arn:aws:eks:eu-central-1:334922741134:cluster/c4-prod-main-eks-cluster'
+alias gotest='kubectx arn:aws:eks:eu-central-1:017951492892:cluster/c4-test-main-eks-cluster'
+alias kp='kubectl port-forward'
+alias ks='kubectl get svc'
+alias kl='kubectl logs'
+alias kg='kubectl get pod'
+alias kd='kubectl describe pod'
+alias kr='kubectl rollout restart deployment'
+alias krs='kubectl rollout restart statefulset'
+alias kdel='kubectl delete pod'
+
+# c4 namespace
+alias kpc='kubectl port-forward -n c4'
+alias ksc='kubectl get svc -n c4'
+alias klc='kubectl logs -n c4'
+alias kgc='kubectl get pod -n c4'
+alias kdc='kubectl describe pod -n c4'
+alias krc='kubectl rollout restart deployment -n c4'
+alias krsc='kubectl rollout restart statefulset -n c4'
+alias kdelc='kubectl delete pod -n c4'
+
+# alfresco namespace
+alias kpa='kubectl port-forward -n alfresco'
+alias ksa='kubectl get svc -n alfresco'
+alias kla='kubectl logs -n alfresco'
+alias kga='kubectl get pod -n alfresco'
+alias kda='kubectl describe pod -n alfresco'
+alias kra='kubectl rollout restart deployment -n alfresco'
+alias krsa='kubectl rollout restart statefulset -n alfresco'
+alias kdela='kubectl delete pod -n alfresco'
+
+# dev-test namespace
+alias kpt='kubectl port-forward -n dev-test'
+alias kst='kubectl get svc -n dev-test'
+alias klt='kubectl logs -n dev-test'
+alias kgt='kubectl get po -n dev-test'
+alias kdt='kubectl describe pod -n dev-test'
+alias krt='kubectl rollout restart deployment -n dev-test'
+alias krst='kubectl rollout restart statefulset -n dev-test'
+alias kdelt='kubectl delete pod -n dev-test'
+
+# dev-fgebhard namespace
+alias kpg='kubectl port-forward -n dev-fgebhard'
+alias ksg='kubectl get svc -n dev-fgebhard'
+alias klg='kubectl logs -n dev-fgebhard'
+alias kgg='kubectl get po -n dev-fgebhard'
+alias kdg='kubectl describe pod -n dev-fgebhard'
+alias krg='kubectl rollout restart deployment -n dev-fgebhard'
+alias krsg='kubectl rollout restart statefulset -n dev-fgebhard'
+alias kdelg='kubectl delete pod -n dev-fgebhard'
+
+# monitoring namespace
+alias kpm='kubectl port-forward -n monitoring'
+alias ksm='kubectl get svc -n monitoring'
+alias klm='kubectl logs -n monitoring'
+alias kgm='kubectl get pod -n monitoring'
+alias kdm='kubectl describe pod -n monitoring'
+alias krm='kubectl rollout restart deployment -n monitoring'
+alias krsm='kubectl rollout restart statefulset -n monitoring'
+alias kdelm='kubectl delete pod -n monitoring'
+
+# flux
+alias flux1='flux reconcile source git flux-system -n flux-system'
+alias flux2='flux reconcile kustomization apps'
+
+# Connect to docdb bastion
+alias gobastion='kubectl exec -it -n alfresco $(kubectl get po -n alfresco | grep documentdb-client | awk "{ print $1 }") -- sh'
+
+# aws
+complete -C '/usr/local/bin/aws_completer' aws

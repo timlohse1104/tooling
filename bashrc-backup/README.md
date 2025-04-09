@@ -4,9 +4,14 @@ List of useful aliases and functions for bash shell.
 
 # 📜Table of Contents
 
-- [🔥Spotlight](#spotlight)
-- [🏷️Aliases](#aliases)
-- [🔧Functions](#functions)
+- [Bashrc Backup](#bashrc-backup)
+- [📜Table of Contents](#table-of-contents)
+  - [🔥Spotlight](#spotlight)
+  - [🏷️Aliases](#️aliases)
+    - [Base](#base)
+    - [Git](#git)
+  - [🔧Functions](#functions)
+    - [Kubernetes Logs](#kubernetes-logs)
 
 ## 🔥[Spotlight](#spotlight)
 
@@ -27,60 +32,72 @@ Fancy git log with graph
 ### Git
 
 - `alias gs='git status'`
-- `alias gac='git add . && git commit -m'`
 - `alias gp1='git pull'`
+- `alias gac='git add . && git commit -m'`
 - `alias gp2='git push'`
 - `alias gco='git checkout'`
 - `alias gcob='git switch -c'`
+
+See further aliases [here](./.bashrc-aliases).
 
 ## 🔧[Functions](#functions)
 
 ### Kubernetes Logs
 
-1. **Kubernetes logs of all pods in namespace**
+1. **Watching alias commands**
 
 Code
 
 ```bash
-function kl() {
-  kubectl logs -n $1
+watching() {
+    check_args 1 "watching <bashrc_alias>" "watching kgc" "$@" || return $?
+
+    alias_command=$(alias "$1" | sed "s/^alias $1='//;s/'.*$//")
+
+    if [ -z "$alias_command" ]; then
+        echo "Alias '$1' not found in .bashrc!"
+        return 1
+    fi
+
+    watch "$alias_command"
 }
 ```
 
-Call
+Usage
 
 ```bash
-kl <namespace>
+watching <bashrc_alias>
 ```
 
-2. **Watch kubernetes logs of all pods in namespace**
+2. **Restarting Statefulsets or Deployments in a specific Namespace**
 
 Code
 
 ```bash
-function kwl() {
-  watch "kubectl logs -n $1"
+function restarting() {
+        check_args 2 "restarting <statefulsets/deployments> <namespace>" "restarting statefulset monitoring" "$@" || return $?
+
+        local type="$1"
+        local namespace="$2"
+
+        entities=$(kubectl get "$type" -n "$namespace" --no-headers -o custom-columns=":metadata.name" | grep '^c4-.*-backend$')
+        if [ -z "$entities" ]; then
+                echo "No '$type' found for namespace '$namespace'."
+                return 1
+        fi
+
+        for entity in $entities; do
+                echo -e "\nRestart '$type' '$entity' in namespace '$namespace'"
+                kubectl rollout restart "$type" "$entity" -n "$namespace"
+                kubectl rollout status "$type" "$entity" -n "$namespace"
+        done
 }
 ```
 
-Call
+Usage
 
 ```bash
-kwl <namespace>
+restarting <statefulsets/deployments> <namespace>
 ```
 
-3. **Kubernetes logs of specific pod in namespace**
-
-Code
-
-```bash
-function klp() {
-  kubectl logs -n $1 $2
-}
-```
-
-Call
-
-```bash
-klp <namespace> <pod-name>
-```
+See further functions [here](./.bashrc-functions).
