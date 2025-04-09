@@ -91,6 +91,7 @@ Collection of all useful tooling i found throughout the time of developing softw
 
 ## 📋[Notes](#notes)
 
+- [Affine](https://affine.pro/) - Affine is an open-source note-taking app that runs in your browser and can be hosted locally.
 - [Notion](https://www.notion.so/) - The all-in-one workspace for your notes, tasks, wikis, and databases.
 - [OneNote](https://www.onenote.com/) - Microsoft OneNote | The digital note-taking app for your devices.
 
@@ -117,6 +118,7 @@ Collection of all useful tooling i found throughout the time of developing softw
 
 ## 📊[Monitoring](#monitoring)
 
+- [OTEL](https://opentelemetry.io/) - OpenTelemetry (OTEL) is an open-source toolkit for instrumenting applications to generate telemetry data that can be used to monitor, troubleshoot, and optimize your applications.
 - [Prometheus](https://prometheus.io/) - Prometheus is an open-source systems monitoring and alerting toolkit originally built at SoundCloud.
 - [Grafana](https://grafana.com/) - Grafana is the open source analytics & monitoring solution for every database.
 - [Loki](https://grafana.com/oss/loki/) - Loki is a horizontally-scalable, highly-available, multi-tenant log aggregation system inspired by Prometheus.
@@ -197,6 +199,7 @@ Collection of all useful tooling i found throughout the time of developing softw
 
 ## 🤹[Other](#other)
 
+- [OCRSpace](https://ocr.space/) - OCRSpace is an Optical Character Recognition (OCR) API which can recognize text from images or PDFs.
 - [Gitmoji](https://gitmoji.dev/) - An emoji guide for your commit messages.
 - [Cat as a Service](https://cataas.com/) - Cat as a Service (CATAAS) provides a REST API to spread peace and love (or not) thanks to cats.
 - [JSON Placeholder](https://jsonplaceholder.typicode.com/) - JSONPlaceholder is a free online REST API that you can use whenever you need some fake data.
