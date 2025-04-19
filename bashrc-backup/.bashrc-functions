@@ -20,9 +20,8 @@ check_args() {
     local usage=$1
     shift
     local example=$1
-    shift
-
-    if [ "$#" -ne "$expected_amount" ]; then
+    
+		if [ "`${#" -gt 0 ] && [ "}$`#" -lt "$expected_amount" ]; then
         echo -e "${RED}${BOLD}[Error]${NC} ${YELLOW}Incorrect number of arguments.${NC}"
         echo -e "${BLUE}[Usage]${NC} ${CYAN}$usage${NC}"
         echo -e "${BLUE}[Example]${NC} ${GREEN}$example${NC}"
