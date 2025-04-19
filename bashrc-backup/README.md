@@ -12,6 +12,7 @@ List of useful aliases and functions for bash shell.
     - [Git](#git)
   - [🔧Functions](#functions)
     - [Kubernetes Logs](#kubernetes-logs)
+  - [Installation](#installation)
 
 ## 🔥[Spotlight](#spotlight)
 
@@ -101,3 +102,17 @@ restarting <statefulsets/deployments> <namespace>
 ```
 
 See further functions [here](./.bashrc-functions).
+
+## Installation
+
+To use this script, first clone the repository:
+
+```
+git clone git@github.com:timlohse1104/tooling.git
+```
+
+Navigate to the `bashrc-backup` directory and run the installation script:
+
+```bash
+bash install.bash
+```

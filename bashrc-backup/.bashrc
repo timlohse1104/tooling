@@ -1,16 +1,16 @@
-# Custom settings
-# -----------------------------------------------------------------------
+# CUSTOM START
 export KUBE_EDITOR=nano
 
 # Load alias file
-if [ -f ~/.bash-aliases ]; then
-  . ~/.bash-aliases
+if [ -f ~/.bashrc-aliases ]; then
+  . ~/.bashrc-aliases
 fi
 
 # Load functions file
-if [ -f ~/.bash-functions ]; then
-  . ~/.bash-functions
+if [ -f ~/.bashrc-functions ]; then
+  . ~/.bashrc-functions
 fi
 
-alias alihelp='cat ~/.bashrc-aliases'
-alias funhelp='cat ~/.bashrc-functions'
+alias aliases='cat ~/.bashrc-aliases'
+alias functions='cat ~/.bashrc-functions'
+# CUSTOM END
