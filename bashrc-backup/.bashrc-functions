@@ -20,7 +20,7 @@ check_args() {
     local usage=$1
     shift
     local example=$1
-    
+
 		if [ "`${#" -gt 0 ] && [ "}$`#" -lt "$expected_amount" ]; then
         echo -e "${RED}${BOLD}[Error]${NC} ${YELLOW}Incorrect number of arguments.${NC}"
         echo -e "${BLUE}[Usage]${NC} ${CYAN}$usage${NC}"
@@ -40,23 +40,23 @@ function kex() {
         check_args 1 "kex <pod>" "kex my-service" "$@" || return $?
         kubectl exec -it $1 -- sh
 }
-function kexcp() {
+function kexc() {
         check_args 1 "kexcp <pod>" "kexcp my-service" "$@" || return $?
         kubectl exec -it $1 -n c4 -- sh
 }
-function kexap() {
+function kexa() {
         check_args 1 "kexap <pod>" "kexap my-service" "$@" || return $?
         kubectl exec -it $1 -n alfresco -- sh
 }
-function kexp() {
+function kext() {
         check_args 1 "kexp <pod>" "kexp my-service" "$@" || return $?
         kubectl exec -it $1 -n dev-test -- sh
 }
-function kexgp() {
+function kexg() {
         check_args 1 "kexgp <pod>" "kexgp my-service" "$@" || return $?
         kubectl exec -it $1 -n dev-fgebhard -- sh
 }
-function kexmp() {
+function kexm() {
         check_args 1 "kexmp <pod>" "kexmp my-service" "$@" || return $?
         kubectl exec -it $1 -n monitoring -- sh
 }
