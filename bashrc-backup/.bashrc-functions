@@ -20,13 +20,20 @@ check_args() {
     local usage=$1
     shift
     local example=$1
+    shift
 
-		if [ "`${#" -gt 0 ] && [ "}$`#" -lt "$expected_amount" ]; then
+    if ! [ "$#" -gt 1 ] && [ "$#" -lt "$expected_amount" ]; then
         echo -e "${RED}${BOLD}[Error]${NC} ${YELLOW}Incorrect number of arguments.${NC}"
         echo -e "${BLUE}[Usage]${NC} ${CYAN}$usage${NC}"
         echo -e "${BLUE}[Example]${NC} ${GREEN}$example${NC}"
         return 1
     fi
+}
+
+# Kubectl watching pods other than c4
+function kwo() {
+    check_args 1 "kwo namespace" "kwo <namespace>" "$@" || return $?
+    watch "kubectl get pod -n $1 | grep -v c4"
 }
 
 # Serve a pod with pino pretty
@@ -75,7 +82,7 @@ function klap() {
         check_args 2 "klap <pod>" "klap my-service -H" "$@" || return $?
         kubectl logs $1 -n alfresco | npx pino-pretty $2
 }
-function klp() {
+function kltp() {
         check_args 2 "klp <pod>" "klp my-service -H" "$@" || return $?
         kubectl logs $1 -n dev-test | npx pino-pretty $2
 }
