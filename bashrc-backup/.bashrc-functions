@@ -33,7 +33,7 @@ check_args() {
 # Kubectl watching pods other than c4
 function kwo() {
     check_args 1 "kwo namespace" "kwo <namespace>" "$@" || return $?
-    watch "kubectl get pod -n $1 | grep -v c4"
+    watch "kubectl get pod -n $1 | grep -v c4-"
 }
 
 # Serve a pod with pino pretty
