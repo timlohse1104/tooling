@@ -207,3 +207,4 @@ Collection of all useful tooling i found throughout the time of developing softw
 - [Emoji Finder](https://emojifinder.com/) - Emoji Finder helps you to find and copy emojis to any device.
 - [Emoji List](https://getemoji.com/) - Emoji List helps you to find and copy emojis to any device.
 - [Paddle](https://www.paddle.com/) - Payments Provider ans global tax management tool for software products.
+- [Windows-as-a-XML-Generator](https://schneegans.de/windows/unattend-generator/) - Install windows with a custom setting as a xml.
