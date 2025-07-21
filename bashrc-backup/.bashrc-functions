@@ -147,3 +147,23 @@ watching() {
 
     watch "$alias_command"
 }
+
+# Switch kubernetes context
+switch() {
+   check_args 1 "switch <namespace>" "switch monitoring" "$@" || return $?
+
+   kubectl config set-context --current --namespace=$1
+
+   echo "Switched to namespace: $1"
+   whereami
+}
+
+whereami() {
+  echo "------------------------------------------------------------"
+  kubectx
+
+  echo "--------------------"
+
+  kubectl config view | awk '/cluster:/{a=$0; next} /namespace:/{print a; print $0}' | sed 's/^[ \t]*//'
+  echo "------------------------------------------------------------"
+}

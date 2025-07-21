@@ -13,7 +13,6 @@ alias gcob='git switch -c'
 alias gl='git log --graph --abbrev-commit --decorate --format=format:"%C(bold blue)%h%C(reset) - %C(bold green)(%ar)%C(reset) %C(white)%s%C(reset) %C(dim white)- %an%C(reset)%C(bold yellow)%d%C(reset)" --all'
 
 # k8s
-alias whereami='kubectx'
 alias goprod='kubectx arn:aws:eks:eu-central-1:334922741134:cluster/c4-prod-main-eks-cluster'
 alias gotest='kubectx arn:aws:eks:eu-central-1:017951492892:cluster/c4-test-main-eks-cluster'
 alias kp='kubectl port-forward'
