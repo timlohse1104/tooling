@@ -13,6 +13,7 @@ List of useful aliases and functions for bash shell.
   - [🔧Functions](#functions)
     - [Kubernetes Logs](#kubernetes-logs)
   - [Installation](#installation)
+    - [Dependencies](#dependencies)
 
 ## 🔥[Spotlight](#spotlight)
 
@@ -76,22 +77,22 @@ Code
 
 ```bash
 function restarting() {
-        check_args 2 "restarting <statefulsets/deployments> <namespace>" "restarting statefulset monitoring" "$@" || return $?
+  check_args 2 "restarting <statefulsets/deployments> <namespace>" "restarting statefulset monitoring" "$@" || return $?
 
-        local type="$1"
-        local namespace="$2"
+  local type="$1"
+  local namespace="$2"
 
-        entities=$(kubectl get "$type" -n "$namespace" --no-headers -o custom-columns=":metadata.name" | grep '^c4-.*-backend$')
-        if [ -z "$entities" ]; then
-                echo "No '$type' found for namespace '$namespace'."
-                return 1
-        fi
+  entities=$(kubectl get "$type" -n "$namespace" --no-headers -o custom-columns=":metadata.name" | grep '^c4-.*-backend$')
+  if [ -z "$entities" ]; then
+    echo "No '$type' found for namespace '$namespace'."
+    return 1
+  fi
 
-        for entity in $entities; do
-                echo -e "\nRestart '$type' '$entity' in namespace '$namespace'"
-                kubectl rollout restart "$type" "$entity" -n "$namespace"
-                kubectl rollout status "$type" "$entity" -n "$namespace"
-        done
+  for entity in $entities; do
+    echo -e "\nRestart '$type' '$entity' in namespace '$namespace'"
+    kubectl rollout restart "$type" "$entity" -n "$namespace"
+    kubectl rollout status "$type" "$entity" -n "$namespace"
+  done
 }
 ```
 
@@ -116,3 +117,13 @@ Navigate to the `bashrc-backup` directory and run the installation script:
 ```bash
 bash install.bash
 ```
+
+### Dependencies
+
+The alias `localcoder` requires the following dependencies:
+
+- [codex](https://github.com/openai/codex)
+- [ollama](https://ollama.com)
+  - [gpt-oss:20b](https://ollama.com/library/gpt-oss)
+
+See shortcut in [tilloh-homelab](https://github.com/timlohse1104/homelab).
