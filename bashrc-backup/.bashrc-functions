@@ -30,14 +30,14 @@ check_args() {
 }
 confirm() {
   local command_to_be_executed=$1
-  echo -e "${MAGENTA}[Confirm] running:${NC} '${CYAN}$command_to_be_executed${NC}'"
+  echo -e "${MAGENTA}[Confirm] running:${NC} '${YELLOW}$command_to_be_executed${NC}'"
   read -p "[y/n]: " -r response
   if [[ "$response" =~ ^[Yy]$ ]]; then
     echo ""
     return 0
   else
-    echo -e "${RED}${BOLD}[Error]${NC} ${YELLOW}Operation cancelled.${NC}"
-    return 1
+    echo -e "${RED}${BOLD}[Not running command]${NC} ${YELLOW}$command_to_be_executed${NC}"
+    exit 1
   fi
 }
 
@@ -75,8 +75,8 @@ function kex() {
 
 # Kubectl logs for a pod with pino pretty
 function klp() {
-  check_args 2 "klp <pod>" "klp my-service -H" "$@" || return $?
-  kubectl logs $1 | npx pino-pretty $2
+  check_args 1 "klp <pod>" "klp my-service" "$@" || return $?
+  kubectl logs $1 | npx pino-pretty@13.0.0 -H
 }
 
 # restart all deployments / statefulsets
