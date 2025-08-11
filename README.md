@@ -179,10 +179,12 @@ Collection of all useful tooling i found throughout the time of developing softw
 - [Plex](https://www.plex.tv/) - Personal collection of movies, series and music.
 - [Playit.gg](https://playit.gg/) - Playit.gg is a free service that allows you to play your local multiplayer games online.
 - [Ngrok](https://ngrok.com/) - Secure introspectable tunnels to localhost.
+- [sish](https://docs.ssi.sh/getting-started) - Local tunnels, alternative to ngrok e.g.
 - [Localtunnel](https://github.com/localtunnel/localtunnel) - Localtunnel allows you to easily share a web service on your local development machine without messing with DNS and firewall settings.
 - [Nextcloud](https://nextcloud.com/) - Nextcloud is the most deployed on-premises file share and collaboration platform. Access & collaborate across your devices.
 - [CasaOS](https://casaos.io/) - CasaOS is a smart home operating system that runs on a Raspberry Pi. It is designed to be simple to use and easy to extend.
 - [Home Assistant](https://www.home-assistant.io/) - Homelab and smart home device control center.
+- [Cloudflare](https://cloudflare.com) - Domain registrar, web security, local tunnels and much more.
 
 ## 👐[Open Source](#open-source)
 
@@ -199,6 +201,7 @@ Collection of all useful tooling i found throughout the time of developing softw
 
 ## 🤹[Other](#other)
 
+- [Vivaldi](https://vivaldi.com/de/) - My browser of choice. Based on chromium but with email, vpn and many more features.
 - [OCRSpace](https://ocr.space/) - OCRSpace is an Optical Character Recognition (OCR) API which can recognize text from images or PDFs.
 - [Gitmoji](https://gitmoji.dev/) - An emoji guide for your commit messages.
 - [Cat as a Service](https://cataas.com/) - Cat as a Service (CATAAS) provides a REST API to spread peace and love (or not) thanks to cats.
