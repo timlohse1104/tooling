@@ -43,6 +43,7 @@ Collection of all useful tooling i found throughout the time of developing softw
   version Control System out there. It is the base for...
 - [GitHub](https://github.com) - The most popular Git hosting service. Made by microsoft.
 - [GitLab](https://gitlab.com) - Another great Git hosting service. Made by GitLab Inc.
+- [Gitea](https://gitea.com) - Open-source and free self-hosting git server.
 
 ## ✒️[Editors](#editors)
 
