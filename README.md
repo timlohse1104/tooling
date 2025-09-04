@@ -50,6 +50,7 @@ Collection of all useful tooling i found throughout the time of developing softw
 - [Visual Studio Code](https://code.visualstudio.com/) - A great editor made by Microsoft. It is highly customizable and has a great community.
 - [IntelliJ IDEA](https://www.jetbrains.com/idea/) - A great IDE for Java and other JVM languages. Made by JetBrains.
 - [Eclipse](https://www.eclipse.org/) - Another great IDE for Java and other JVM languages. Made by the Eclipse Foundation.
+- [Cursor](https://www.cursor.com/) - A powerful AI-first code editor designed for pair-programming with AI models.
 
 ## 🧑‍💼️[Package Managers](#package-managers)
 
