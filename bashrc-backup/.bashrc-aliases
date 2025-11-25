@@ -1,5 +1,6 @@
 # aws
 complete -C '/usr/local/bin/aws_completer' aws
+alias awslogin="aws sso login --profile c4-sso"
 
 # local agentic codex
 alias localcoder="codex --model gpt-oss:20b --oss"
