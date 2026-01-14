@@ -1,6 +1,6 @@
 # claude
-alias normalclaude="claude --settings '~/.claude/settings.json'"
-alias openclaude="claude --settings '~/.claude/openrouter.settings.json'"
+alias normalclaude="claude --settings ~/.claude/settings.json"
+alias openclaude="claude --settings ~/.claude/openrouter.settings.json"
 
 # aws
 complete -C '/usr/local/bin/aws_completer' aws
