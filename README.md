@@ -181,6 +181,7 @@ Collection of all useful tooling i found throughout the time of developing softw
 
 - [pi.hole](https://pi-hole.net/) - Network-wide ad blocking via your own Linux hardware.
 - [Plex](https://www.plex.tv/) - Personal collection of movies, series and music.
+- [Plexamp](https://www.plex.tv/plexamp/) - Beautiful music player for audiophiles and music lovers, designed specifically for Plex music libraries.
 - [Playit.gg](https://playit.gg/) - Playit.gg is a free service that allows you to play your local multiplayer games online.
 - [Ngrok](https://ngrok.com/) - Secure introspectable tunnels to localhost.
 - [sish](https://docs.ssi.sh/getting-started) - Local tunnels, alternative to ngrok e.g.
