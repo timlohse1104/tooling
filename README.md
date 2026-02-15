@@ -28,6 +28,7 @@ Collection of all useful tooling i found throughout the time of developing softw
   - [👐Open Source](#open-source)
   - [🤖AI Tools](#ai-tools)
   - [🪟Windows Programs](#windows-programs)
+  - [🎮Gaming](#gaming)
   - [🤹Other](#other)
 
 ## 🔥[Spotlight](#spotlight)
@@ -218,6 +219,17 @@ Collection of all useful tooling i found throughout the time of developing softw
 - [Primus Standard](https://www.seagullscientific.com/label-software/barcode-label-design-and-printing/) - Professional barcode label design and printing software.
 - [Revo Uninstaller](https://www.revouninstaller.com/) - Advanced uninstaller tool that removes unwanted programs and their leftover files completely.
 - [Audacity](https://www.audacityteam.org/) - Free, open-source, cross-platform audio editor and recording software.
+
+## 🎮[Gaming](#gaming)
+
+- [Steam](https://store.steampowered.com/) - Digital distribution platform and storefront for PC gaming with social features and game library management.
+- [Epic Games Launcher](https://www.epicgames.com/store/) - Digital game store and launcher with free weekly games and exclusive titles.
+- [Battle.net](https://www.blizzard.com/apps/battle.net/desktop) - Blizzard Entertainment's gaming platform for titles like World of Warcraft, Overwatch, and Diablo.
+- [Riot Client](https://www.riotgames.com/) - Unified launcher for Riot Games titles including League of Legends, VALORANT, and Teamfight Tactics.
+- [BakkesMod](https://bakkesmod.com/) - Trainer and mod for Rocket League with custom training tools and quality-of-life improvements.
+- [Medal](https://medal.tv/) - Automatic game clip recording and sharing platform for capturing and sharing gaming highlights.
+- [CurseForge](https://www.curseforge.com/) - Platform for discovering and managing game modifications, primarily for Minecraft and World of Warcraft.
+- [NVIDIA App](https://www.nvidia.com/en-us/software/nvidia-app/) - Unified NVIDIA software for GPU drivers, game optimization, and performance monitoring.
 
 ## 🤹[Other](#other)
 
