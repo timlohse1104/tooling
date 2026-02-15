@@ -187,6 +187,7 @@ Collection of all useful tooling i found throughout the time of developing softw
 - [Nextcloud](https://nextcloud.com/) - Nextcloud is the most deployed on-premises file share and collaboration platform. Access & collaborate across your devices.
 - [CasaOS](https://casaos.io/) - CasaOS is a smart home operating system that runs on a Raspberry Pi. It is designed to be simple to use and easy to extend.
 - [Home Assistant](https://www.home-assistant.io/) - Homelab and smart home device control center.
+- [Portainer](https://www.portainer.io/) - Container management platform that simplifies Docker and Kubernetes deployment and management with an intuitive web interface.
 - [Cloudflare](https://cloudflare.com) - Domain registrar, web security, local tunnels and much more.
 
 ## 👐[Open Source](#open-source)
