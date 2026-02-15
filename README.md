@@ -212,6 +212,7 @@ Collection of all useful tooling i found throughout the time of developing softw
 - [WSL](https://learn.microsoft.com/en-us/windows/wsl/) - Windows Subsystem for Linux lets developers run a GNU/Linux environment directly on Windows.
 - [Chris Titus Tools](https://christitus.com/windows-tool/) - Windows debloat and optimization tool.
 - [7-Zip](https://www.7-zip.org/) - Free and open-source file archiver with a high compression ratio.
+- [WinRAR](https://www.win-rar.com/) - Popular file archiver with support for RAR and ZIP formats and advanced compression features.
 - [FileZilla](https://filezilla-project.org/) - Free FTP solution with client and server applications for file transfers.
 - [WinX DVD Ripper Platinum](https://www.winxdvd.com/dvd-ripper-platinum/) - DVD backup software to rip and convert DVDs to various video formats.
 - [AnyMP4 Blu-ray Ripper](https://www.anymp4.com/blu-ray-ripper/) - Professional Blu-ray ripping software to convert Blu-ray discs to digital video formats.
