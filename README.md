@@ -27,6 +27,7 @@ Collection of all useful tooling i found throughout the time of developing softw
   - [🌐Home Network](#home-network)
   - [👐Open Source](#open-source)
   - [🤖AI Tools](#ai-tools)
+  - [🪟Windows Programs](#windows-programs)
   - [🤹Other](#other)
 
 ## 🔥[Spotlight](#spotlight)
@@ -202,6 +203,16 @@ Collection of all useful tooling i found throughout the time of developing softw
 - [Deepseek](https://chat.deepseek.com/) - Biggest OpenAI competitor. Provider of AI-powerd chat service from china.
 - [DeepL](https://www.deepl.com/) - DeepL trains artificial intelligence to understand and translate texts.
 
+## 🪟[Windows Programs](#windows-programs)
+
+- [WSL](https://learn.microsoft.com/en-us/windows/wsl/) - Windows Subsystem for Linux lets developers run a GNU/Linux environment directly on Windows.
+- [Chris Titus Tools](https://christitus.com/windows-tool/) - Windows debloat and optimization tool.
+- [7-Zip](https://www.7-zip.org/) - Free and open-source file archiver with a high compression ratio.
+- [FileZilla](https://filezilla-project.org/) - Free FTP solution with client and server applications for file transfers.
+- [WinX DVD Ripper Platinum](https://www.winxdvd.com/dvd-ripper-platinum/) - DVD backup software to rip and convert DVDs to various video formats.
+- [AnyMP4 Blu-ray Ripper](https://www.anymp4.com/blu-ray-ripper/) - Professional Blu-ray ripping software to convert Blu-ray discs to digital video formats.
+- [CPUID HWMonitor](https://www.cpuid.com/softwares/hwmonitor.html) - Hardware monitoring program that reads PC systems main health sensors like temperatures, voltages, and fan speeds.
+
 ## 🤹[Other](#other)
 
 - [Vivaldi](https://vivaldi.com/de/) - My browser of choice. Based on chromium but with email, vpn and many more features.
@@ -213,7 +224,5 @@ Collection of all useful tooling i found throughout the time of developing softw
 - [Emoji Finder](https://emojifinder.com/) - Emoji Finder helps you to find and copy emojis to any device.
 - [Emoji List](https://getemoji.com/) - Emoji List helps you to find and copy emojis to any device.
 - [Paddle](https://www.paddle.com/) - Payments Provider ans global tax management tool for software products.
-- [Windows-as-a-XML-Generator](https://schneegans.de/windows/unattend-generator/) - Install windows with a custom setting as a xml.
 - [JWT](https://jwt.io) - Debugging JWT.
 - [ASCII Art](https://geocities.restorativland.org/SoHo/7373) - Best library for ancient ascii art!
-- [Chris Titus Tools](https://christitus.com/windows-tool/) - Windows debloat and optimization tool.
