@@ -249,3 +249,4 @@ Collection of all useful tooling i found throughout the time of developing softw
 - [JWT](https://jwt.io) - Debugging JWT.
 - [ASCII Art](https://geocities.restorativland.org/SoHo/7373) - Best library for ancient ascii art!
 - [Secure Government Container Initiative](https://container.gov.de) - German government initiative providing hardened, secure container images for public administration and organizations.
+- [Bambu Studio](https://bambulab.com/en/download/studio) - 3D printing slicer software for Bambu Lab printers with advanced features and seamless printer integration.
