@@ -215,3 +215,4 @@ Collection of all useful tooling i found throughout the time of developing softw
 - [Windows-as-a-XML-Generator](https://schneegans.de/windows/unattend-generator/) - Install windows with a custom setting as a xml.
 - [JWT](https://jwt.io) - Debugging JWT.
 - [ASCII Art](https://geocities.restorativland.org/SoHo/7373) - Best library for ancient ascii art!
+- [Chris Titus Tools](https://christitus.com/windows-tool/) - Windows debloat and optimization tool.
