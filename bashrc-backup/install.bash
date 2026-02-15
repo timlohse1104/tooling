@@ -30,18 +30,5 @@ printf "Appended new bashrc settings to ~/.bashrc.\n"
 printf "Installation complete! Bash configuration updated successfully.\n"
 printf "See available aliases with 'aliases' and functions with 'functions'.\n"
 
-
-# Handle codex configuration
-printf "Check if codex config file exists in codex config directory...\n"
-if [ ! -f ~/.codex/config.toml ]; then
-   printf "Codex config file does not exist in codex config directory.\n"
-   printf "Copy codex config to codex config directory...\n"
-   cp /codex/config.toml ~/.codex/config.toml
-else
-  printf "Append codex config to codex config directory...\n"
-  echo "" >> ~/.codex/config.toml
-  cat ./codex/config.toml >> ~/.codex/config.toml
-fi
-
 # Finalize script and reload the shell
 exec bash -l

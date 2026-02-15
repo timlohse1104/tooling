@@ -2,10 +2,6 @@
 complete -C '/usr/local/bin/aws_completer' aws
 alias awslogin="aws sso login --profile c4-sso"
 
-# local agentic codex
-alias localcoder="codex --model gpt-oss:20b --oss"
-alias mistralcoder="codex --profile mistral"
-
 # flux
 alias flux1='flux reconcile source git flux-system -n flux-system'
 alias flux2='flux reconcile kustomization apps'

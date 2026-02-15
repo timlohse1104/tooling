@@ -1,8 +1,0 @@
-[model_providers.mistral]
-name = "Mistral"
-base_url = "https://api.mistral.ai/v1"
-env_key = "MISTRAL_API_KEY"
-
-[profiles.mistral]
-model = "codestral-2501"
-model_provider = "mistral"

@@ -17,9 +17,7 @@ tooling/
     ├── .bashrc            # Main bashrc with custom PS1 and file loading
     ├── .bashrc-aliases    # Shell aliases (git, kubectl, aws, claude)
     ├── .bashrc-functions  # Shell functions (kubernetes helpers)
-    ├── install.bash       # Installation script
-    └── codex/
-        └── config.toml    # Codex CLI configuration for Mistral
+    └── install.bash       # Installation script
 ```
 
 ## Installation
@@ -38,8 +36,6 @@ This copies aliases/functions to home directory and appends custom bashrc settin
 - `aliases` - View all aliases
 - `functions` - View all functions
 - `normalclaude` / `openclaude` - Claude CLI with different settings
-- `mistralcoder` - Codex with Mistral profile (requires `MISTRAL_API_KEY`)
-- `localcoder` - Codex with local Ollama model
 
 ## Key Functions
 

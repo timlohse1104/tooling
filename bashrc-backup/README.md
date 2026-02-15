@@ -13,8 +13,6 @@ List of useful aliases and functions for bash shell.
   - [🔧Functions](#functions)
     - [Kubernetes Logs](#kubernetes-logs)
   - [Installation](#installation)
-    - [Dependencies](#dependencies)
-    - [Codex configuration](#codex-configuration)
 
 ## 🔥[Spotlight](#spotlight)
 
@@ -118,21 +116,3 @@ Navigate to the `bashrc-backup` directory and run the installation script:
 ```bash
 bash install.bash
 ```
-
-### Dependencies
-
-The alias `localcoder` requires the following dependencies:
-
-- [codex](https://github.com/openai/codex)
-- [ollama](https://ollama.com)
-  - [gpt-oss:20b](https://ollama.com/library/gpt-oss)
-
-See shortcut in [tilloh-homelab](https://github.com/timlohse1104/homelab).
-
-### Codex configuration
-
-Copy the [config.toml](./codex/config.toml) to `~/.codex/config.toml`.
-
-Make sure to export `MISTRAL_API_KEY` in the terminal session.
-
-This will provide all necessary prerequisites to run `mistralcoder` alias.
