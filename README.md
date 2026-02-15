@@ -217,6 +217,7 @@ Collection of all useful tooling i found throughout the time of developing softw
 - [CPUID HWMonitor](https://www.cpuid.com/softwares/hwmonitor.html) - Hardware monitoring program that reads PC systems main health sensors like temperatures, voltages, and fan speeds.
 - [Primus Standard](https://www.seagullscientific.com/label-software/barcode-label-design-and-printing/) - Professional barcode label design and printing software.
 - [Revo Uninstaller](https://www.revouninstaller.com/) - Advanced uninstaller tool that removes unwanted programs and their leftover files completely.
+- [Audacity](https://www.audacityteam.org/) - Free, open-source, cross-platform audio editor and recording software.
 
 ## 🤹[Other](#other)
 
