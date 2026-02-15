@@ -206,6 +206,7 @@ Collection of all useful tooling i found throughout the time of developing softw
 
 ## 🪟[Windows Programs](#windows-programs)
 
+- [PowerToys](https://github.com/microsoft/PowerToys) - Microsoft PowerToys is a set of utilities for power users to tune and streamline their Windows experience for greater productivity.
 - [WSL](https://learn.microsoft.com/en-us/windows/wsl/) - Windows Subsystem for Linux lets developers run a GNU/Linux environment directly on Windows.
 - [Chris Titus Tools](https://christitus.com/windows-tool/) - Windows debloat and optimization tool.
 - [7-Zip](https://www.7-zip.org/) - Free and open-source file archiver with a high compression ratio.
