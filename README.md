@@ -213,6 +213,8 @@ Collection of all useful tooling i found throughout the time of developing softw
 - [WinX DVD Ripper Platinum](https://www.winxdvd.com/dvd-ripper-platinum/) - DVD backup software to rip and convert DVDs to various video formats.
 - [AnyMP4 Blu-ray Ripper](https://www.anymp4.com/blu-ray-ripper/) - Professional Blu-ray ripping software to convert Blu-ray discs to digital video formats.
 - [CPUID HWMonitor](https://www.cpuid.com/softwares/hwmonitor.html) - Hardware monitoring program that reads PC systems main health sensors like temperatures, voltages, and fan speeds.
+- [Primus Standard](https://www.seagullscientific.com/label-software/barcode-label-design-and-printing/) - Professional barcode label design and printing software.
+- [Revo Uninstaller](https://www.revouninstaller.com/) - Advanced uninstaller tool that removes unwanted programs and their leftover files completely.
 
 ## 🤹[Other](#other)
 
