@@ -196,6 +196,7 @@ Collection of all useful tooling i found throughout the time of developing softw
 
 ## 🤖[AI Tools](#ai-tools)
 
+- [Claude Code](https://claude.ai/code) - Anthropic's official CLI for Claude, an AI coding assistant that helps with software development tasks directly from the terminal.
 - [Le Chat](https://chat.mistral.ai/chat) - Mistral AI chat of european (french) conpany.
 - [ChatQPT](https://chatqpt.com/) - ChatQPT is a free online chat room that allows you to meet with people from all over the world.
 - [Deepseek](https://chat.deepseek.com/) - Biggest OpenAI competitor. Provider of AI-powerd chat service from china.
