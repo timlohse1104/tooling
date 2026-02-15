@@ -231,6 +231,7 @@ Collection of all useful tooling i found throughout the time of developing softw
 - [Medal](https://medal.tv/) - Automatic game clip recording and sharing platform for capturing and sharing gaming highlights.
 - [CurseForge](https://www.curseforge.com/) - Platform for discovering and managing game modifications, primarily for Minecraft and World of Warcraft.
 - [NVIDIA App](https://www.nvidia.com/en-us/software/nvidia-app/) - Unified NVIDIA software for GPU drivers, game optimization, and performance monitoring.
+- [CrosshairX](https://www.crosshairx.com/) - Customizable crosshair overlay tool for games to improve aim and precision.
 
 ## 🤹[Other](#other)
 
