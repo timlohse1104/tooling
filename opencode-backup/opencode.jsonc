@@ -1,0 +1,72 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "model": "lmstudio/qwen3.6-27b@q4_k_xl",
+  "permission": {
+      "*": "ask",
+      "bash": {
+        "ls*": "allow",
+        "find*": "allow",
+        "kubectl get*": "allow",
+        "kubectl describe*": "allow",
+        "kubectl logs*": "allow",
+        "kubectl explain*": "allow",
+        "kubectl top*": "allow",
+        "kubectl version*": "allow",
+        "kubectl cluster-info*": "allow",
+        "kubectl api-resources*": "allow",
+        "kubectl api-versions*": "allow",
+        "gh pr list*": "allow",
+        "gh pr view*": "allow",
+        "gh pr status*": "allow",
+        "gh pr checks*": "allow",
+        "gh pr diff*": "allow",
+        "gh pr comment list*": "allow",
+        "gh workflow list*": "allow",
+        "gh workflow view*": "allow",
+        "gh release list*": "allow",
+        "gh release view*": "allow",
+        "gh repo view*": "allow",
+        "aws eks describe*": "allow",
+        "aws eks list*": "allow",
+        "aws ec2 describe*": "allow",
+        "aws s3 ls*": "allow",
+        "aws ssm get-parameter*": "allow",
+        "aws ssm describe*": "allow",
+        "aws secretsmanager list*": "allow",
+        "aws secretsmanager describe*": "allow",
+        "aws iam list*": "allow",
+        "aws iam get*": "allow",
+        "aws cloudwatch get*": "allow",
+        "aws sts get-caller-identity*": "allow",
+        "flux get*": "allow",
+        "flux logs*": "allow",
+        "helm list*": "allow",
+        "helm status*": "allow",
+        "helm get*": "allow",
+        "helm history*": "allow",
+        "helm show*": "allow",
+        "git log*": "allow",
+        "git status*": "allow",
+        "git diff*": "allow",
+        "git show*": "allow"
+      },
+      "webfetch": "allow",
+      "websearch": "allow",
+      "codesearch": "allow",
+      "grep": "allow",
+      "read": "allow"
+  },
+  "provider": {
+    "lmstudio": {
+      "npm": "@ai-sdk/openai-compatible",
+      "name": "LM Studio",
+      "options": {
+        "baseURL": "http://192.168.1.169:1234/v1",
+        "apiKey": "lm-studio"
+      },
+      "models": {
+        "qwen3.6-27b@q4_k_xl": {"name": "Qwen3.6 27B UD"}
+      }
+    }
+  }
+}
