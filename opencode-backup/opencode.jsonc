@@ -83,6 +83,7 @@
       "codesearch": "allow",
       "grep*": "allow",
       "glob*": "allow",
+      "tail*": "allow",
       "read*": "allow"
   },
   "mcp": {
