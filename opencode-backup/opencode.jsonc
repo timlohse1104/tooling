@@ -1,6 +1,8 @@
 {
   "$schema": "https://opencode.ai/config.json",
   "model": "lmstudio/qwen3.6-27b@q4_k_xl",
+  "autoupdate": false,
+  "share": "disabled",
   "permission": {
       "*": "ask",
       "bash": {
@@ -90,7 +92,8 @@
     "atlassian": {
       "type": "remote",
       "url": "https://mcp.atlassian.com/v1/mcp",
-      "oauth": {}
+      "oauth": {},
+      "enabled": true
     },
     "playwright": {
       "type": "local",
@@ -107,7 +110,9 @@
         "apiKey": "lm-studio"
       },
       "models": {
-        "qwen3.6-27b@q4_k_xl": {"name": "Qwen3.6 27B UD"}
+        "qwen3.6-27b@q4_k_xl": {"name": "Qwen3.6 27B XL", "modalities": {"input": ["text", "image"], "output": ["text"]}},
+        "qwen3.6-27b@iq4_xs": {"name": "Qwen3.6 27B XS", "modalities": {"input": ["text", "image"], "output": ["text"]}},
+        "qwen3.6-35b-a3b": {"name": "Qwen3.6 35B A3B UD", "modalities": {"input": ["text", "image"], "output": ["text"]}}
       }
     }
   }
