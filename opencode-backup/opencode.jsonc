@@ -48,7 +48,10 @@
         "git log*": "allow",
         "git status*": "allow",
         "git diff*": "allow",
-        "git show*": "allow"
+        "git show*": "allow",
+        "grep*": "allow",
+        "glob*": "allow",
+        "tail*": "allow"
       },
       "playwright_browser_navigate": "allow",
       "playwright_browser_snapshot": "allow",
@@ -81,9 +84,6 @@
       "webfetch": "allow",
       "websearch": "allow",
       "codesearch": "allow",
-      "grep*": "allow",
-      "glob*": "allow",
-      "tail*": "allow",
       "read*": "allow"
   },
   "mcp": {
