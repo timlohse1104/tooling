@@ -81,9 +81,9 @@
       "webfetch": "allow",
       "websearch": "allow",
       "codesearch": "allow",
-      "grep": "allow",
-      "glob": "allow",
-      "read": "allow"
+      "grep*": "allow",
+      "glob*": "allow",
+      "read*": "allow"
   },
   "mcp": {
     "atlassian": {
