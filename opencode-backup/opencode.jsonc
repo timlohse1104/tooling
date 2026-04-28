@@ -58,6 +58,8 @@
       "grep": "allow",
       "echo *": "allow",
       "cat *": "allow",
+      "tail *": "allow",
+      "/tmp/*": "allow",
       "read": "allow",
       "playwright_browser_navigate": "allow",
       "playwright_browser_snapshot": "allow",
