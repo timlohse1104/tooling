@@ -1,6 +1,6 @@
 {
   "$schema": "https://opencode.ai/config.json",
-  "model": "lmstudio/qwen3.6-27b@q4_k_xl",
+  "model": "qwen3.6-35b-a3b@iq4_xs",
   "autoupdate": false,
   "share": "disabled",
   "permission": {
@@ -115,9 +115,7 @@
         "apiKey": "lm-studio"
       },
       "models": {
-        "qwen3.6-27b@q4_k_xl": {"name": "Qwen3.6 27B XL", "modalities": {"input": ["text", "image"], "output": ["text"]}},
-        "qwen3.6-27b@iq4_xs": {"name": "Qwen3.6 27B XS", "modalities": {"input": ["text", "image"], "output": ["text"]}},
-        "qwen3.6-35b-a3b": {"name": "Qwen3.6 35B A3B UD", "modalities": {"input": ["text", "image"], "output": ["text"]}}
+        "qwen3.6-35b-a3b@iq4_xs": {"name": "Qwen3.6 35B A3B UD", "modalities": {"input": ["text", "image"], "output": ["text"]}}
       }
     }
   }
