@@ -6,8 +6,6 @@
   "permission": {
       "*": "ask",
       "bash": {
-        "ls *": "allow",
-        "find *": "allow",
         "kubectl get *": "allow",
         "kubectl describe *": "allow",
         "kubectl logs *": "allow",
@@ -51,15 +49,14 @@
         "git status *": "allow",
         "git diff *": "allow",
         "git show *": "allow",
-        "grep *": "allow",
+        "ls *": "allow",
+        "find *": "allow",
+        "echo *": "allow",
+        "cat *": "allow",
         "tail *": "allow"
       },
       "glob": "allow",
       "grep": "allow",
-      "echo *": "allow",
-      "cat *": "allow",
-      "tail *": "allow",
-      "/tmp/*": "allow",
       "read": "allow",
       "playwright_browser_navigate": "allow",
       "playwright_browser_snapshot": "allow",
