@@ -1,0 +1,4 @@
+[    1021ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://www.foo.com/digimedia-logo.webp:0
+[    1022ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://www.foo.com/rails/active_storage/representations/redirect/eyJfcmFpbHMiOnsiZGF0YSI6NjkwLCJwdXIiOiJibG9iX2lkIn19--3c584edb74d296732a7aedbb91cf205040a43d88/eyJfcmFpbHMiOnsiZGF0YSI6eyJmb3JtYXQiOiJqcGciLCJyZXNpemVfdG9fZml0IjpbMzAwLDMwMF19LCJwdXIiOiJ2YXJpYXRpb24ifX0=--682189ce97c10ce5f75850849170c90ff3346b96/cordovabeach.jpg:0
+[    1167ms] [ERROR] Failed to load resource: net::ERR_CERT_AUTHORITY_INVALID @ https://www.googletagmanager.com/gtag/js?id=UA-1726084-83:0
+[    1387ms] [LOG] www.foo.com @ http://www.foo.com/cookie_checks_top_bar.js:50

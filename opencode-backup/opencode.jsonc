@@ -2,10 +2,13 @@
   "$schema": "https://opencode.ai/config.json",
   "model": "qwen3.6-35b-a3b",
   "autoupdate": false,
+  "plugin": ["opencode-claude-auth@latest"],
+  "enabled_providers": ["lmstudio", "anthropic"],
   "share": "disabled",
   "permission": {
       "*": "ask",
       "bash": {
+        "*": "ask",
         "kubectl get *": "allow",
         "kubectl describe *": "allow",
         "kubectl logs *": "allow",
@@ -49,15 +52,18 @@
         "git status *": "allow",
         "git diff *": "allow",
         "git show *": "allow",
-        "ls *": "allow",
-        "find *": "allow",
-        "echo *": "allow",
-        "cat *": "allow",
-        "tail *": "allow"
+        "ls *": "allow"
       },
+      "edit": "ask",
       "glob": "allow",
       "grep": "allow",
-      "read": "allow",
+      "read": {
+        "*": "allow",
+        "*.env": "deny",
+        "*.env.*": "deny",
+        "*.env.example": "allow",
+        "*.env.default": "allow"
+      },
       "playwright_browser_navigate": "allow",
       "playwright_browser_snapshot": "allow",
       "playwright_browser_take_screenshot": "allow",
@@ -88,7 +94,10 @@
       "atlassian_lookupJiraAccountId": "allow",
       "webfetch": "allow",
       "websearch": "allow",
-      "codesearch": "allow"
+      "codesearch": "allow",
+      "todowrite": "allow",
+      "skill": "allow",
+      "question": "allow"
   },
   "mcp": {
     "atlassian": {
@@ -97,9 +106,9 @@
       "oauth": {},
       "enabled": true
     },
-    "playwright": {
+    "chrome": {
       "type": "local",
-      "command": ["npx", "@playwright/mcp@latest"],
+      "command": ["npx", "chrome-mcp"],
       "enabled": true
     }
   },
@@ -113,7 +122,8 @@
       },
       "models": {
         "qwen3.6-35b-a3b": {"name": "Qwen3.6 35B A3B UD", "modalities": {"input": ["text", "image"], "output": ["text"]}}
-      }
+      },
+      "whitelist": ["qwen3.6-35b-a3b"]
     }
   }
 }
