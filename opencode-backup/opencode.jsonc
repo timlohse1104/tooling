@@ -76,6 +76,7 @@
       "atlassian_getAccessibleAtlassianResources": "allow",
       "atlassian_getConfluencePage": "allow",
       "atlassian_searchConfluenceUsingCql": "allow",
+      "atlassian_searchJiraIssuesUsingJql": "allow",
       "atlassian_getConfluenceSpaces": "allow",
       "atlassian_getPagesInConfluenceSpace": "allow",
       "atlassian_getConfluencePageFooterComments": "allow",
@@ -121,9 +122,10 @@
         "apiKey": "lm-studio"
       },
       "models": {
-        "qwen3.6-35b-a3b": {"name": "Qwen3.6 35B A3B UD", "modalities": {"input": ["text", "image"], "output": ["text"]}}
+        "qwen3.6-35b-a3b": {"name": "Qwen3.6 35B A3B UD", "modalities": {"input": ["text", "image"], "output": ["text"]}},
+        "granite-4.1-30b": {"name": "Granite 4.1 30B", "modalities": {"input": ["text", "image"], "output": ["text"]}}
       },
-      "whitelist": ["qwen3.6-35b-a3b"]
+      "whitelist": ["qwen3.6-35b-a3b", "granite-4.1-30b"]
     }
   }
 }
