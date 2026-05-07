@@ -93,6 +93,9 @@
       "atlassian_search": "allow",
       "atlassian_fetch": "allow",
       "atlassian_lookupJiraAccountId": "allow",
+      "external_directory": {
+        "*": "allow"
+      },
       "webfetch": "allow",
       "websearch": "allow",
       "codesearch": "allow",
