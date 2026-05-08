@@ -1,7 +1,7 @@
 {
   "$schema": "https://opencode.ai/config.json",
   "model": "qwen3.6-35b-a3b",
-  "autoupdate": false,
+  "autoupdate": true,
   "plugin": ["opencode-claude-auth@latest"],
   "enabled_providers": ["lmstudio", "anthropic", "mistral"],
   "share": "disabled",
