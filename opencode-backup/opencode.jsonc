@@ -3,7 +3,7 @@
   "model": "qwen3.6-35b-a3b",
   "autoupdate": false,
   "plugin": ["opencode-claude-auth@latest"],
-  "enabled_providers": ["lmstudio", "anthropic"],
+  "enabled_providers": ["lmstudio", "anthropic", "mistral"],
   "share": "disabled",
   "permission": {
       "*": "ask",
@@ -125,10 +125,9 @@
         "apiKey": "lm-studio"
       },
       "models": {
-        "qwen3.6-35b-a3b": {"name": "Qwen3.6 35B A3B UD", "modalities": {"input": ["text", "image"], "output": ["text"]}},
-        "granite-4.1-30b": {"name": "Granite 4.1 30B", "modalities": {"input": ["text", "image"], "output": ["text"]}}
+        "qwen3.6-35b-a3b": {"name": "Qwen3.6 35B A3B UD", "modalities": {"input": ["text", "image"], "output": ["text"]}}
       },
-      "whitelist": ["qwen3.6-35b-a3b", "granite-4.1-30b"]
+      "whitelist": ["qwen3.6-35b-a3b"]
     }
   }
 }
