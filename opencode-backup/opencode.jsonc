@@ -3,7 +3,7 @@
   "model": "qwen3.6-35b-a3b",
   "autoupdate": true,
   "plugin": ["opencode-claude-auth@latest"],
-  "enabled_providers": ["lmstudio", "anthropic"],
+  "enabled_providers": ["lmstudio", "llama.cpp", "anthropic"],
   "share": "disabled",
   "permission": {
       "*": "ask",
@@ -126,6 +126,25 @@
         "qwen3.6-35b-a3b": {"name": "Qwen3.6 35B A3B UD", "modalities": {"input": ["text", "image"], "output": ["text"]}}
       },
       "whitelist": ["qwen3.6-35b-a3b"]
+    },
+    "llama.cpp": {
+      "npm": "@ai-sdk/openai-compatible",
+      "name": "llama.cpp (local)",
+      "options": {
+        "baseURL": "http://192.168.1.169:8081/v1",
+        "apiKey": "no-key"
+      },
+      "models": {
+        "qwen3.6-27b": {
+          "name": "Qwen3.6 27B UD-Q4_K_XL",
+          "modalities": {"input": ["text", "image"], "output": ["text"]},
+          "limit": {
+            "context": 8192,
+            "output": 4096
+          }
+        }
+      },
+      "whitelist": ["qwen3.6-27b"]
     }
   }
 }
