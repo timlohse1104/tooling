@@ -135,16 +135,16 @@
         "apiKey": "no-key"
       },
       "models": {
-        "Qwen3.6-27B-UD-Q4_K_XL.gguf": {
-          "name": "Qwen3.6 27B UD-Q4_K_XL",
+        "Qwen3.6-27B-IQ4_XS-mtp.gguf": {
+          "name": "Qwen3.6 27B MTP (IQ4_XS, 200K ctx)",
           "modalities": {"input": ["text"], "output": ["text"]},
           "limit": {
-            "context": 8192,
-            "output": 4096
+            "context": 200000,
+            "output": 32768
           }
         }
       },
-      "whitelist": ["Qwen3.6-27B-UD-Q4_K_XL.gguf"]
+      "whitelist": ["Qwen3.6-27B-IQ4_XS-mtp.gguf"]
     }
   }
 }

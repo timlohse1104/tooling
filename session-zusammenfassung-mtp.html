@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<title>Qwen3.6-27B MTP Performance Report</title>
+<style>
+  body { font-family: 'Segoe UI', sans-serif; max-width: 960px; margin: 40px auto; padding: 0 20px; background: #1a1a2e; color: #e0e0e0; line-height: 1.6; }
+  h1 { color: #00d4ff; border-bottom: 2px solid #00d4ff; padding-bottom: 10px; }
+  h2 { color: #7ec8e3; margin-top: 35px; }
+  h3 { color: #c0c0c0; }
+  table { border-collapse: collapse; width: 100%; margin: 15px 0; }
+  th, td { border: 1px solid #444; padding: 8px 12px; text-align: left; }
+  th { background: #2a2a4a; color: #00d4ff; }
+  tr:nth-child(even) { background: #222244; }
+  code { background: #2a2a4a; padding: 2px 6px; border-radius: 3px; color: #00ff88; font-size: 0.95em; }
+  pre { background: #0d0d1a; padding: 15px; border-radius: 8px; overflow-x: auto; border: 1px solid #333; }
+  pre code { background: none; }
+  .fazit { background: #1a3a1a; border-left: 4px solid #00ff88; padding: 20px; margin: 20px 0; border-radius: 0 8px 8px 0; }
+  .info { background: #1a1a3a; border-left: 4px solid #00d4ff; padding: 15px; margin: 15px 0; border-radius: 0 8px 8px 0; }
+  .warning { background: #3a3a1a; border-left: 4px solid #ffaa00; padding: 15px; margin: 15px 0; border-radius: 0 8px 8px 0; }
+  .danger { background: #3a1a1a; border-left: 4px solid #ff4444; padding: 15px; margin: 15px 0; border-radius: 0 8px 8px 0; }
+  .highlight-row { background: #1a3a1a !important; font-weight: bold; }
+  .dim { color: #888; }
+  .tag { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 0.85em; margin-right: 4px; }
+  .tag-green { background: #1a3a1a; color: #00ff88; border: 1px solid #00ff88; }
+  .tag-blue { background: #1a1a3a; color: #00d4ff; border: 1px solid #00d4ff; }
+  .tag-yellow { background: #3a3a1a; color: #ffaa00; border: 1px solid #ffaa00; }
+  .tag-red { background: #3a1a1a; color: #ff4444; border: 1px solid #ff4444; }
+  hr { border: none; border-top: 1px solid #333; margin: 30px 0; }
+</style>
+</head>
+<body>
+
+<h1>Qwen3.6-27B MTP Performance Report</h1>
+<p><em>Erstellt: 10.&ndash;11. Mai 2026 &nbsp;|&nbsp; Hardware: RTX 4090 + i9-13900KF</em></p>
+
+<!-- ============================================================ -->
+<!-- FAZIT -->
+<!-- ============================================================ -->
+
+<div class="fazit">
+<h2 style="color: #00ff88; margin-top: 0;">Fazit: Empfohlene Konfiguration fuer agentisches Arbeiten</h2>
+
+<table>
+  <tr><th>Parameter</th><th>Wert</th></tr>
+  <tr><td>Modell</td><td><code>Qwen3.6-27B-IQ4_XS-mtp.gguf</code> (14.47 GB, froggeric)</td></tr>
+  <tr><td>Kontext</td><td><strong>200.000 Tokens</strong></td></tr>
+  <tr><td>KV-Cache</td><td>q4_0 Keys + q4_0 Values (mit TurboQuant/Hadamard-Rotation)</td></tr>
+  <tr><td>Spekulative Dekodierung</td><td>MTP (Multi-Token Prediction, 3 Draft-Tokens)</td></tr>
+  <tr><td>Speed</td><td><strong>80.41 t/s</strong> (2.28x vs. Baseline)</td></tr>
+  <tr><td>VRAM frei</td><td>1.978 MiB (sicherer Betrieb)</td></tr>
+</table>
+
+<p><strong>Startbefehl:</strong></p>
+<pre><code>E:\llama.cpp\mtp-build\build\bin\Release\llama-server.exe -m E:\llama.cpp\models\Qwen3.6-27B-IQ4_XS-mtp.gguf --spec-type mtp --spec-draft-n-max 3 -ngl 99 -c 200000 -ctk q4_0 -ctv q4_0 -fa on -np 1 --host 0.0.0.0 --port 8081</code></pre>
+
+<p><strong>Warum dieses Setup?</strong></p>
+<ul>
+  <li>200K Kontext reicht fuer grosse Codebases und lange Agent-Sessions</li>
+  <li>80 t/s ist &gt;2x schneller als die Baseline &ndash; kein Warten auf Antworten</li>
+  <li>1.978 MiB freies VRAM &ndash; stabiler Betrieb ohne OOM-Risiko</li>
+  <li>IQ4_XS Quantisierung ist importance-matrix-basiert &ndash; gute Qualitaet bei kleiner Groesse</li>
+</ul>
+</div>
+
+<hr>
+
+<!-- ============================================================ -->
+<!-- HARDWARE -->
+<!-- ============================================================ -->
+
+<h2>Hardware</h2>
+<table>
+  <tr><th>Komponente</th><th>Details</th></tr>
+  <tr><td>CPU</td><td>Intel i9-13900KF (8P + 16E Cores, Raptor Lake)</td></tr>
+  <tr><td>GPU</td><td>NVIDIA GeForce RTX 4090 &ndash; 23.027 MiB VRAM, Compute 8.9 (Ada Lovelace)</td></tr>
+  <tr><td>RAM</td><td>47.83 GB DDR5</td></tr>
+  <tr><td>OS</td><td>Windows (llama-server) + WSL2 Linux (OpenCode)</td></tr>
+</table>
+
+<hr>
+
+<!-- ============================================================ -->
+<!-- GESAMTE TESTERGEBNISSE -->
+<!-- ============================================================ -->
+
+<h2>Alle Testergebnisse</h2>
+
+<h3>Phase 1: Server-Flag Tuning (ohne MTP, UD-Q4_K_XL, 8K Kontext)</h3>
+<p class="dim">Modell: <code>unsloth/Qwen3.6-27B-GGUF</code> UD-Q4_K_XL (17.6 GB) &nbsp;|&nbsp; Server: llama-server v8766 (stabil)</p>
+<table>
+  <tr><th>Config</th><th>Tokens</th><th>Dauer</th><th>t/s</th><th>vs. Baseline</th></tr>
+  <tr><td>Baseline (keine Optimierung)</td><td>4.361</td><td>2:07</td><td>34.22</td><td>&ndash;</td></tr>
+  <tr class="highlight-row"><td>+ Flash Attention (<code>-fa on</code>)</td><td>4.347</td><td>2:03</td><td>35.19</td><td>+2.8%</td></tr>
+  <tr><td>+ KV-Cache q8_0</td><td>3.576</td><td>1:43</td><td>34.58</td><td>+1.1%</td></tr>
+  <tr><td>+ Batch-Groessen (<code>-b 4096 -ub 1024</code>)</td><td>4.074</td><td>1:59</td><td>33.99</td><td>-0.7%</td></tr>
+  <tr><td>+ Threads/Prio (<code>-t 8 --prio 2</code>)</td><td>4.538</td><td>2:15</td><td>33.58</td><td>-1.9%</td></tr>
+</table>
+<p><strong>Erkenntnis:</strong> Nur Flash Attention bringt messbaren Gewinn. Bei einem Modell vollstaendig auf der GPU ist die VRAM-Bandbreite der Flaschenhals &ndash; Server-Flags aendern daran wenig.</p>
+
+<h3>Phase 2: MTP Spekulative Dekodierung (UD-Q4_K_XL, 8K Kontext)</h3>
+<p class="dim">Modell: <code>havenoammo/Qwen3.6-27B-MTP-UD-GGUF</code> UD-Q4_K_XL (18.1 GB) &nbsp;|&nbsp; Server: MTP-Build v9032</p>
+<table>
+  <tr><th>Config</th><th>Tokens</th><th>Dauer</th><th>t/s</th><th>vs. Baseline</th></tr>
+  <tr><td>Baseline (Flash Attention, kein MTP)</td><td>4.347</td><td>2:03</td><td>35.19</td><td>1.0x</td></tr>
+  <tr class="highlight-row"><td>MTP aktiviert (<code>--spec-type mtp --spec-draft-n-max 3</code>)</td><td>4.126</td><td>0:48</td><td>85.17</td><td><strong>2.42x</strong></td></tr>
+</table>
+<p><strong>Erkenntnis:</strong> MTP liefert den mit Abstand groessten Speedup. Das Modell nutzt seine eigenen eingebauten MTP-Heads &ndash; kein separates Draft-Modell noetig.</p>
+
+<h3>Phase 3: Kontext-Maximierung (UD-Q4_K_XL mit MTP)</h3>
+<p class="dim">Modell: <code>havenoammo/Qwen3.6-27B-MTP-UD-GGUF</code> UD-Q4_K_XL (18.1 GB) &nbsp;|&nbsp; Server: MTP-Build v9032</p>
+<table>
+  <tr><th>Kontext</th><th>KV-Cache</th><th>Tokens</th><th>Dauer</th><th>t/s</th><th>VRAM frei</th><th>Status</th></tr>
+  <tr><td>8K</td><td>f16</td><td>4.126</td><td>0:48</td><td>85.17</td><td>3.200 MiB</td><td><span class="tag tag-green">OK</span></td></tr>
+  <tr><td>65K</td><td>q8_0</td><td>5.366</td><td>1:56</td><td>46.00</td><td>1.105 MiB</td><td><span class="tag tag-green">OK</span></td></tr>
+  <tr><td>128K</td><td>q4_0</td><td>4.076</td><td>1:36</td><td>42.42</td><td>1.031 MiB</td><td><span class="tag tag-yellow">Knapp</span></td></tr>
+  <tr><td>131K</td><td>q4_0</td><td colspan="4">&ndash;</td><td><span class="tag tag-red">OOM</span></td></tr>
+</table>
+<p><strong>Erkenntnis:</strong> UD-Q4_K_XL (18.1 GB) ist zu gross fuer &gt;128K Kontext auf 24 GB VRAM. Kleineres Modell noetig.</p>
+
+<h3>Phase 4: Kleineres Modell fuer maximalen Kontext (IQ4_XS mit MTP)</h3>
+<p class="dim">Modell: <code>froggeric/Qwen3.6-27B-MTP-GGUF</code> IQ4_XS (15.5 GB) &nbsp;|&nbsp; Server: MTP-Build v9032 (inkl. TurboQuant/Hadamard-Rotation)</p>
+<table>
+  <tr><th>Kontext</th><th>KV-Cache</th><th>Tokens</th><th>Dauer</th><th>t/s</th><th>VRAM frei</th><th>Status</th></tr>
+  <tr><td>131K</td><td>q4_0</td><td>4.707</td><td>0:50</td><td>93.65</td><td>3.352 MiB</td><td><span class="tag tag-green">OK</span></td></tr>
+  <tr class="highlight-row"><td>200K</td><td>q4_0</td><td>4.120</td><td>0:51</td><td>80.41</td><td>1.978 MiB</td><td><span class="tag tag-green">Empfohlen</span></td></tr>
+  <tr><td>262K</td><td>q4_0</td><td>4.047</td><td>3:54</td><td>17.24</td><td>-316 MiB*</td><td><span class="tag tag-red">Zu langsam</span></td></tr>
+</table>
+<p><em>* 262K ueberschreitet das VRAM-Budget um 316 MiB. Der Server startet, aber lagert Daten auf die CPU aus, was die Speed von 80+ t/s auf 17 t/s einbrechen laesst.</em></p>
+<p><strong>Erkenntnis:</strong> IQ4_XS (15.5 GB) spart 2.6 GB gegenueber UD-Q4_K_XL und ermoeglicht 200K Kontext bei 80 t/s. Das ist der beste Kompromiss aus Speed, Kontext und Qualitaet.</p>
+
+<h3>Phase 5: Vision + MTP Kompatibilitaetstest (IQ4_XS mit MTP + mmproj)</h3>
+<p class="dim">Modell: <code>froggeric/Qwen3.6-27B-MTP-GGUF</code> IQ4_XS (15.5 GB) + <code>mmproj-Qwen3.6-27B-f16.gguf</code> (885 MB) &nbsp;|&nbsp; Server: MTP-Build v9032</p>
+<table>
+  <tr><th>Test</th><th>Kontext</th><th>MTP</th><th>Vision</th><th>Tokens</th><th>Dauer</th><th>t/s</th><th>Status</th></tr>
+  <tr><td>Text (ToDo App)</td><td>131K</td><td>Ja</td><td>mmproj geladen</td><td>4.574</td><td>0:50</td><td>91.18</td><td><span class="tag tag-green">OK</span></td></tr>
+  <tr><td>Vision (Screenshot)</td><td>131K</td><td>Ja</td><td>Bild gesendet</td><td colspan="3">&ndash;</td><td><span class="tag tag-red">Crash</span></td></tr>
+</table>
+<div class="danger">
+<h3>MTP + Vision: Server-Crash bestaetigt</h3>
+<p>Der Server crasht beim Verarbeiten von Bildern im MTP-Modus mit dem Fehler:</p>
+<pre><code>find_slot: non-consecutive token position 4622 after 4621 for sequence 0 with 375 new tokens</code></pre>
+<p>Dies ist ein bekannter Bug in <a href="https://github.com/ggml-org/llama.cpp/pull/22673" style="color:#ff4444">PR #22673 (llama + spec: MTP Support)</a>. Die Bild-Tokens (375 Tokens fuer ein Bild) werden nicht korrekt in den MTP-Spekulationsmodus eingebettet. Der Bug betrifft alle Plattformen und wurde von froggeric in der <a href="https://huggingface.co/froggeric/Qwen3.6-27B-MTP-GGUF" style="color:#ff4444">Modell-Dokumentation</a> bestaetigt.</p>
+<p><strong>Workaround:</strong> Fuer Vision-Aufgaben den Server ohne <code>--spec-type mtp</code> und ohne <code>-np 1</code> starten. MTP und Vision koennen derzeit nicht gleichzeitig genutzt werden.</p>
+</div>
+<p><strong>Erkenntnis:</strong> MTP + Vision ist aktuell nicht moeglich. Fuer agentisches Arbeiten wird der reine Text-Modus mit MTP empfohlen (200K Kontext, 80 t/s). Vision erfordert einen separaten Server-Start ohne MTP.</p>
+
+<hr>
+
+<!-- ============================================================ -->
+<!-- SPEED-UEBERSICHT -->
+<!-- ============================================================ -->
+
+<h2>Speed-Uebersicht: Alle Konfigurationen im Vergleich</h2>
+<table>
+  <tr><th>Modell</th><th>MTP</th><th>Kontext</th><th>KV-Cache</th><th>t/s</th><th>vs. Baseline</th></tr>
+  <tr><td>UD-Q4_K_XL</td><td>Nein</td><td>8K</td><td>f16</td><td>35.19</td><td>1.0x</td></tr>
+  <tr><td>UD-Q4_K_XL</td><td>Ja</td><td>8K</td><td>f16</td><td>85.17</td><td>2.42x</td></tr>
+  <tr><td>UD-Q4_K_XL</td><td>Ja</td><td>65K</td><td>q8_0</td><td>46.00</td><td>1.31x</td></tr>
+  <tr><td>UD-Q4_K_XL</td><td>Ja</td><td>128K</td><td>q4_0</td><td>42.42</td><td>1.21x</td></tr>
+  <tr><td>IQ4_XS</td><td>Ja</td><td>131K</td><td>q4_0</td><td>93.65</td><td>2.66x</td></tr>
+  <tr class="highlight-row"><td>IQ4_XS</td><td>Ja</td><td>200K</td><td>q4_0</td><td>80.41</td><td>2.28x</td></tr>
+  <tr><td>IQ4_XS</td><td>Ja</td><td>262K</td><td>q4_0</td><td>17.24</td><td>0.49x</td></tr>
+  <tr><td colspan="6" style="background:#2a2a4a; color:#7ec8e3; text-align:center;"><em>Vision-Tests (IQ4_XS + mmproj)</em></td></tr>
+  <tr><td>IQ4_XS + mmproj</td><td>Ja</td><td>131K (Text)</td><td>q4_0</td><td>91.18</td><td>2.59x</td></tr>
+  <tr><td>IQ4_XS + mmproj</td><td>Ja</td><td>131K (Vision)</td><td>q4_0</td><td colspan="2"><span class="tag tag-red">Crash &ndash; Bug PR #22673</span></td></tr>
+</table>
+
+<hr>
+
+<!-- ============================================================ -->
+<!-- TECHNISCHE DETAILS -->
+<!-- ============================================================ -->
+
+<h2>Technische Details</h2>
+
+<h3>Eingesetzte Optimierungen</h3>
+<table>
+  <tr><th>Technik</th><th>Beschreibung</th><th>Auswirkung</th></tr>
+  <tr><td><strong>MTP (Multi-Token Prediction)</strong></td><td>Modell sagt mehrere Tokens voraus und verifiziert sie in einem Durchgang. Eingebaut in die MTP-Heads des Modells, kein separates Draft-Modell noetig.</td><td>2.0&ndash;2.7x Speedup</td></tr>
+  <tr><td><strong>Flash Attention</strong></td><td>Effizientere Attention-Berechnung mit reduziertem Speicherzugriff.</td><td>~3% Speedup</td></tr>
+  <tr><td><strong>TurboQuant (Hadamard-Rotation)</strong></td><td>Rotiert Q/K/V Aktivierungen vor KV-Cache Quantisierung, reduziert Ausreisser. PR #21038, gemergt in llama.cpp master.</td><td>Bessere Qualitaet bei q4_0 KV-Cache</td></tr>
+  <tr><td><strong>KV-Cache q4_0</strong></td><td>4-bit Quantisierung des KV-Cache. Qwen3.6-27B nutzt nur 16 von 64 Layern fuer KV (Rest ist lineare Attention/SSM).</td><td>~4x weniger VRAM fuer Kontext</td></tr>
+  <tr><td><strong>IQ4_XS Quantisierung</strong></td><td>Importance-Matrix basierte 4-bit Quantisierung. Kleiner als UD-Q4_K_XL bei akzeptabler Qualitaet.</td><td>2.6 GB VRAM gespart</td></tr>
+</table>
+
+<h3>Architektur-Besonderheiten Qwen3.6-27B</h3>
+<ul>
+  <li><strong>Hybrid-Architektur:</strong> 16x (3x Gated DeltaNet/SSM + 1x Gated Attention) &ndash; nur 16 von 64 Layern nutzen KV-Cache</li>
+  <li><strong>Recurrent State:</strong> ~598 MiB fix (skaliert nicht mit Kontext)</li>
+  <li><strong>Nativer Kontext:</strong> 262.144 Tokens, erweiterbar auf 1.010.000 mit YaRN</li>
+  <li><strong>MTP:</strong> 3 MTP-Heads, muessen explizit im GGUF enthalten sein (Standard-Konvertierung ueberspringt sie)</li>
+</ul>
+
+<h3>MTP-Build Details</h3>
+<table>
+  <tr><th>Parameter</th><th>Wert</th></tr>
+  <tr><td>llama.cpp Version</td><td>v9032 (Build 5d5f1b46e)</td></tr>
+  <tr><td>Compiler</td><td>MSVC 19.50.35730.0 (VS 2025 Community)</td></tr>
+  <tr><td>CUDA</td><td>13.2 (V13.2.78)</td></tr>
+  <tr><td>Basis</td><td>PR #22673 Branch (MTP Support) + PR #21038 (TurboQuant)</td></tr>
+  <tr><td>Build-Pfad</td><td><code>E:\llama.cpp\mtp-build\build\bin\Release\llama-server.exe</code></td></tr>
+</table>
+
+<hr>
+
+<!-- ============================================================ -->
+<!-- DATEIPFADE UND MODELLE -->
+<!-- ============================================================ -->
+
+<h2>Dateipfade und Modelle</h2>
+<table>
+  <tr><th>Was</th><th>Pfad / Quelle</th><th>Groesse</th></tr>
+  <tr><td>MTP llama-server</td><td><code>E:\llama.cpp\mtp-build\build\bin\Release\llama-server.exe</code></td><td>&ndash;</td></tr>
+  <tr><td>Stabiler llama-server (v8766)</td><td><code>E:\llama.cpp\llama-server.exe</code></td><td>&ndash;</td></tr>
+  <tr class="highlight-row"><td>IQ4_XS MTP (empfohlen)</td><td><code>E:\llama.cpp\models\Qwen3.6-27B-IQ4_XS-mtp.gguf</code><br><a href="https://huggingface.co/froggeric/Qwen3.6-27B-MTP-GGUF" style="color:#00d4ff">froggeric/Qwen3.6-27B-MTP-GGUF</a></td><td>15.5 GB</td></tr>
+  <tr><td>UD-Q4_K_XL MTP</td><td><code>E:\llama.cpp\models\Qwen3.6-27B-MTP-UD-Q4_K_XL.gguf</code><br><a href="https://huggingface.co/havenoammo/Qwen3.6-27B-MTP-UD-GGUF" style="color:#00d4ff">havenoammo/Qwen3.6-27B-MTP-UD-GGUF</a></td><td>18.1 GB</td></tr>
+  <tr><td>UD-Q4_K_XL Baseline (kein MTP)</td><td><code>E:\llama.cpp\models\Qwen3.6-27B-UD-Q4_K_XL.gguf</code><br><a href="https://huggingface.co/unsloth/Qwen3.6-27B-GGUF" style="color:#00d4ff">unsloth/Qwen3.6-27B-GGUF</a></td><td>17.6 GB</td></tr>
+  <tr><td>Vision Projector</td><td><code>mmproj-Qwen3.6-27B-f16.gguf</code><br><a href="https://huggingface.co/froggeric/Qwen3.6-27B-MTP-GGUF" style="color:#00d4ff">froggeric/Qwen3.6-27B-MTP-GGUF</a></td><td>885 MB</td></tr>
+</table>
+
+<hr>
+
+<!-- ============================================================ -->
+<!-- OFFENE PUNKTE -->
+<!-- ============================================================ -->
+
+<div class="info">
+<h2 style="margin-top: 0;">Offene Punkte</h2>
+<ol>
+  <li><strong>MTP + Vision Bug:</strong> Sobald <a href="https://github.com/ggml-org/llama.cpp/pull/22673" style="color:#00d4ff">PR #22673</a> den Vision-Bug fixt oder in den llama.cpp master gemergt wird, entfaellt die Einschraenkung und der separate MTP-Build.</li>
+  <li><strong>Vision-Workaround:</strong> Fuer Vision-Aufgaben kann der Server temporaer ohne MTP gestartet werden (gleiche GGUF, ohne <code>--spec-type mtp</code>).</li>
+</ol>
+</div>
+
+<div class="warning">
+<h3>Bekannte Einschraenkungen</h3>
+<ul>
+  <li>MTP erfordert <code>-np 1</code> (Single-Sequence Mode, kein paralleles Batching)</li>
+  <li>MTP + Vision crasht (Bug in PR #22673, alle Plattformen)</li>
+  <li>Der stabile llama-server (v8766) kann keine MTP-GGUFs laden</li>
+  <li>MTP-GGUFs sind ~0.5 GB groesser als Standard-GGUFs (zusaetzliche MTP-Tensoren)</li>
+  <li>262K Kontext passt nicht in 24 GB VRAM mit IQ4_XS &ndash; 200K ist das praktische Maximum</li>
+</ul>
+</div>
+
+<hr>
+
+<!-- ============================================================ -->
+<!-- BUILD REFERENZ -->
+<!-- ============================================================ -->
+
+<h2>Build-Referenz</h2>
+<p class="dim">Fuer die Reproduktion des MTP-Builds auf Windows.</p>
+
+<h3>Voraussetzungen</h3>
+<table>
+  <tr><th>Tool</th><th>Version</th></tr>
+  <tr><td>Git</td><td>2.52+</td></tr>
+  <tr><td>CMake</td><td>3.31+ (CUDA 13.x Support noetig)</td></tr>
+  <tr><td>CUDA Toolkit</td><td>13.2+ (VS 2025 Support noetig)</td></tr>
+  <tr><td>Visual Studio</td><td>2025 Community (Workload: Desktopentwicklung mit C++)</td></tr>
+</table>
+
+<h3>Build-Befehle</h3>
+<pre><code>git clone https://github.com/ggml-org/llama.cpp.git mtp-build
+cd mtp-build
+git fetch origin pull/22673/head:mtp-pr
+git checkout mtp-pr
+cmake -B build -DGGML_CUDA=ON -DCMAKE_BUILD_TYPE=Release
+cmake --build build --config Release --target llama-server</code></pre>
+
+<h3>Build-Probleme und Loesungen</h3>
+<table>
+  <tr><th>Problem</th><th>Loesung</th></tr>
+  <tr><td><code>NMake not found</code></td><td>Visual Studio 2025 Community installieren (Workload: C++ Desktop)</td></tr>
+  <tr><td><code>refusing to merge unrelated histories</code></td><td>Repo ohne <code>--depth 1</code> klonen</td></tr>
+  <tr><td>Merge-Konflikte PR #22673 vs. master</td><td>PR-Branch direkt auschecken (<code>git checkout mtp-pr</code>)</td></tr>
+  <tr><td><code>unsupported Microsoft Visual Studio version</code></td><td>CUDA 12.6 auf 13.2 aktualisieren</td></tr>
+  <tr><td><code>cudafe++ ACCESS_VIOLATION</code></td><td>CMake auf 3.31+ aktualisieren</td></tr>
+</table>
+
+<hr>
+<p class="dim" style="text-align: center;">Test-Prompt: &quot;Erstelle ein klassische ToDo Anwendung in einer einzigen HTML Datei.&quot;<br>Alle Tests mit gleichen Sampling-Parametern (llama-server Default).</p>
+
+</body>
+</html>
