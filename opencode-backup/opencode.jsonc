@@ -137,11 +137,7 @@
       "models": {
         "Qwen3.6-27B-IQ4_XS-mtp.gguf": {
           "name": "Qwen3.6 27B MTP (IQ4_XS, 200K ctx)",
-          "modalities": {"input": ["text"], "output": ["text"]},
-          "limit": {
-            "context": 200000,
-            "output": 32768
-          }
+          "modalities": {"input": ["text"], "output": ["text"]}
         }
       },
       "whitelist": ["Qwen3.6-27B-IQ4_XS-mtp.gguf"]
