@@ -136,11 +136,15 @@
       },
       "models": {
         "Qwen3.6-27B-IQ4_XS-mtp.gguf": {
-          "name": "Qwen3.6 27B MTP (IQ4_XS, 200K ctx)",
+          "name": "Qwen3.6 27B Dense MTP (IQ4_XS, 200K ctx)",
+          "modalities": {"input": ["text"], "output": ["text"]}
+        },
+        "Qwen3.6-35B-A3B-MTP-IQ4_XS.gguf": {
+          "name": "Qwen3.6 35B-A3B MoE (IQ4_XS, 262K ctx)",
           "modalities": {"input": ["text"], "output": ["text"]}
         }
       },
-      "whitelist": ["Qwen3.6-27B-IQ4_XS-mtp.gguf"]
+      "whitelist": ["Qwen3.6-27B-IQ4_XS-mtp.gguf", "Qwen3.6-35B-A3B-MTP-IQ4_XS.gguf"]
     }
   }
 }
