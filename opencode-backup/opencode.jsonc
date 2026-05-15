@@ -108,9 +108,9 @@
       "oauth": {},
       "enabled": true
     },
-    "chrome": {
+    "playwright": {
       "type": "local",
-      "command": ["npx", "chrome-mcp"],
+      "command": ["npx", "@playwright/mcp@latest"],
       "enabled": true
     }
   },
@@ -142,9 +142,13 @@
         "Qwen3.6-35B-A3B-MTP-IQ4_XS.gguf": {
           "name": "Qwen3.6 35B-A3B MoE (IQ4_XS, 262K ctx)",
           "modalities": {"input": ["text"], "output": ["text"]}
+        },
+        "gemma-4-26B-A4B-it-UD-Q4_K_XL.gguf": {
+          "name": "Gemma 4 26B-A4B (Q4_K_XL, 262K ctx)",
+          "modalities": {"input": ["text", "image"], "output": ["text"]}
         }
       },
-      "whitelist": ["Qwen3.6-27B-IQ4_XS-mtp.gguf", "Qwen3.6-35B-A3B-MTP-IQ4_XS.gguf"]
+      "whitelist": ["Qwen3.6-27B-IQ4_XS-mtp.gguf", "Qwen3.6-35B-A3B-MTP-IQ4_XS.gguf", "gemma-4-26B-A4B-it-UD-Q4_K_XL.gguf"]
     }
   }
 }
