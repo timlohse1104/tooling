@@ -110,7 +110,7 @@
     },
     "playwright": {
       "type": "local",
-      "command": ["npx", "@playwright/mcp@latest"],
+      "command": ["npx", "@playwright/mcp@latest", "--browser", "chromium"],
       "enabled": true
     }
   },

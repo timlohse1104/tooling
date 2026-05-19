@@ -9,6 +9,7 @@ A step-by-step checklist for setting up a new system from scratch.
 - [ ] Distro installieren
 - [ ] System updaten: `sudo apt update && sudo apt upgrade -y`
 - [ ] Basis-Tools installieren: `sudo apt install -y curl git wget unzip`
+- [ ] Terminal: Copy & Paste auf `Strg + C` / `Strg + V` einstellen (Terminaleinstellungen → Tastenkombinationen)
 
 ---
 
@@ -24,7 +25,12 @@ A step-by-step checklist for setting up a new system from scratch.
 - [ ] [Vivaldi](https://vivaldi.com/de/download/) laden und installieren
 - [ ] Anmelden & Einstellungen synchronisieren
 - [ ] Email-Account verbinden
-- [ ] Browser einrichten (Paneel, Tabs, Erweiterungen, ...)
+- [ ] Paneel einrichten – nur folgende Apps in dieser Reihenfolge (von oben nach unten):
+  1. Downloads
+  2. Verlauf
+  3. Mail
+  4. Übersetzen
+- [ ] Tabs & Erweiterungen einrichten
 
 ---
 
@@ -67,7 +73,20 @@ A step-by-step checklist for setting up a new system from scratch.
 
 ---
 
-## 7. OpenCode
+## 7. Node.js (via nvm)
+
+- [ ] nvm installieren: `curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.3/install.sh | bash`
+- [ ] Terminal neu starten (oder nvm manuell sourcen), dann Node LTS installieren: `nvm install --lts`
+- [ ] `node`/`npx` in System-PATH verlinken (damit OpenCode sie ohne Shell-Integration findet):
+  ```bash
+  ln -sf ~/.nvm/versions/node/$(node --version)/bin/node ~/.local/bin/node
+  ln -sf ~/.nvm/versions/node/$(node --version)/bin/npx ~/.local/bin/npx
+  ```
+- [ ] Playwright Chromium installieren: `npx @playwright/mcp@latest install-browser chromium`
+
+---
+
+## 8. OpenCode
 
 - [ ] OpenCode installieren:
   ```bash
@@ -77,7 +96,7 @@ A step-by-step checklist for setting up a new system from scratch.
 
 ---
 
-## 8. Gaming – Steam
+## 9. Gaming – Steam
 
 - [ ] [Steam](https://store.steampowered.com/about/) laden und installieren
 - [ ] Anmelden
@@ -85,7 +104,15 @@ A step-by-step checklist for setting up a new system from scratch.
 
 ---
 
-## 9. Weitere Schritte
+## 10. Docker Engine
+
+- [ ] Docker Engine installieren ([Anleitung](https://docs.docker.com/engine/install/debian/#install-using-the-repository))
+- [ ] User zur `docker`-Gruppe hinzufügen: `sudo usermod -aG docker $USER && newgrp docker`
+- [ ] Installation prüfen: `docker run hello-world`
+
+---
+
+## 11. Weitere Schritte
 
 > Platzhalter für zusätzliche Einrichtungsschritte.
 
