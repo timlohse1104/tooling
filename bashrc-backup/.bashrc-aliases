@@ -41,3 +41,9 @@ alias kp='kubectl port-forward'
 alias kl='kubectl logs'
 alias kr='kubectl rollout restart deployment'
 alias krs='kubectl rollout restart statefulset'
+
+# ssh
+alias sshloestercloud='ssh -i ~/.ssh/id_ed25519_loestercloud sshd@loestercloud'
+alias sshrita='ssh -i ~/.ssh/id_ed25519_rita koester@rita'
+alias sshrosi='ssh -i ~/.ssh/id_ed25519_rosi koester@rosi'
+alias sshgertrude='ssh -i ~/.ssh/id_ed25519_gertrude koester@gertrude'

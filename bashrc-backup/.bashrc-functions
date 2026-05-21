@@ -98,19 +98,37 @@ function restarting() {
 
 # Deleting pods with status in a namespace
 delete_with_status() {
-  check_args 2 "delete_unknowns <status> <namespace>" "delete_unknowns ContainerStatusUnknown monitoring" "$@" || return $?
-  local namespace="$1"
-  kubectl get pods -n "$namespace" -o jsonpath='{range .items[?(@.status.containerStatuses[*].state.terminated.reason=="ContainerStatusUnknown")]}{.metadata.name}{"\n"}{end}' | while read -r pod; do
+  check_args 2 "delete_with_status <status> <namespace>" "delete_with_status Completed c4" "$@" || return $?
+  local status="$1"
+  local namespace="$2"
+  local pods=""
+  echo -e "${YELLOW}[Info]${NC} Deleting pods with status '${status}' in namespace '${namespace}'"
+  if [ "$status" = "Completed" ]; then
+    pods=$(kubectl get pods -n "$namespace" --field-selector="status.phase=Succeeded" -o name | sed 's/pod\///')
+  else
+    pods=$(kubectl get pods -n "$namespace" -o jsonpath="{range .items[?(@.status.containerStatuses[*].state.terminated.reason==\"$status\")]}"'{.metadata.name}{"\n"}{end}')
+  fi
+  if [ -z "$pods" ]; then
+    echo -e "${GREEN}[Success]${NC} No pods with status '${status}' found in namespace '${namespace}'"
+    return 0
+  fi
+  local count=0
+  for pod in $pods; do
+    count=$((count + 1))
+  done
+  echo -e "${YELLOW}[Info]${NC} Found ${count} pod(s) to delete"
+  for pod in $pods; do
     if [ -n "$pod" ]; then
-      echo "Pod to be deleted: $pod"
+      echo -e "${BLUE}[Delete]${NC} Deleting pod: ${CYAN}$pod${NC}"
       kubectl delete pod "$pod" -n "$namespace"
       if [ $? -eq 0 ]; then
-        echo "Pod successfully deleted: $pod"
+        echo -e "${GREEN}[Success]${NC} Deleted: $pod"
       else
-        echo "Error while deleting pod: $pod"
+        echo -e "${RED}[Error]${NC} Failed to delete: $pod"
       fi
     fi
   done
+  echo -e "${YELLOW}[Info]${NC} Done."
 }
 
 # Watching alias commands
