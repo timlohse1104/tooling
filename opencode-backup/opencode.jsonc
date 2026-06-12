@@ -1,6 +1,6 @@
 {
   "$schema": "https://opencode.ai/config.json",
-  "model": "Qwen3.6-27B-IQ4_XS-mtp.gguf",
+  "model": "gemma-4-26B-A4B-it-qat-UD-Q4_K_XL.gguf",
   "autoupdate": true,
   "plugin": ["opencode-claude-auth@latest"],
   "enabled_providers": ["lmstudio", "llama.cpp", "anthropic"],
@@ -143,20 +143,12 @@
           "name": "Qwen3.6 35B-A3B MoE (IQ4_XS)",
           "modalities": {"input": ["text"], "output": ["text"]}
         },
-        "gemma-4-26B-A4B-it-UD-Q4_K_XL.gguf": {
+        "gemma-4-26B-A4B-it-qat-UD-Q4_K_XL.gguf": {
           "name": "Gemma 4 26B-A4B (Q4_K_XL)",
           "modalities": {"input": ["text", "image"], "output": ["text"]}
-        },
-        "gemma-4-12b-it-UD-Q4_K_XL.gguf": {
-          "name": "Gemma 4 12B (Q4_K_XL)",
-          "modalities": {"input": ["text", "image"], "output": ["text"]}
-        },
-        "gemma-4-12b-it-UD-Q8_K_XL.gguf": {
-          "name": "Gemma 4 12B (Q8_K_XL)",
-          "modalities": {"input": ["text", "image"], "output": ["text"]}
-        },
+        }
       },
-      "whitelist": ["Qwen3.6-27B-IQ4_XS-mtp.gguf", "Qwen3.6-35B-A3B-MTP-IQ4_XS.gguf", "gemma-4-26B-A4B-it-UD-Q4_K_XL.gguf", "gemma-4-12b-it-UD-Q4_K_XL.gguf", "gemma-4-12b-it-UD-Q8_K_XL.gguf"]
+      "whitelist": ["Qwen3.6-27B-IQ4_XS-mtp.gguf", "Qwen3.6-35B-A3B-MTP-IQ4_XS.gguf", "gemma-4-26B-A4B-it-qat-UD-Q4_K_XL.gguf"]
     }
   }
 }
