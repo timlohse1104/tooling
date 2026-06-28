@@ -22,6 +22,15 @@ tooling/
 ├── claude-backup/
 │   ├── .claude/                     # settings.json, mcp.json, commands/, skills/
 │   └── install.sh                   # Copies to ~/.claude/
+├── llama.cpp/                       # Local LLM inference (prebuilt Vulkan llama.cpp)
+│   ├── bootstrap.sh                 # Fetch+extract prebuilt Vulkan release into vendor/
+│   ├── download-model.sh            # Pull GGUF(s) from HuggingFace to $LLAMA_MODELS_DIR
+│   ├── server.sh                    # Start llama-server (router or single model)
+│   ├── config.env.example           # Paths/version/port (copy to config.env)
+│   ├── models.list                  # HuggingFace download manifest
+│   ├── presets/models.example.ini   # Router preset template
+│   ├── PLAN.md / README.md          # Design + usage
+│   └── vendor/ cache/               # Binaries + downloads (gitignored)
 └── fresh_linux/debian-based/
     └── bootstrap-guide.md           # New machine setup checklist
 ```
@@ -33,6 +42,7 @@ tooling/
 | Bash aliases + functions | `cd bashrc-backup && bash install.bash` |
 | OpenCode config | `cd opencode-backup && bash install.sh` |
 | Claude Code config | `cd claude-backup && bash install.sh` |
+| Local llama.cpp (Vulkan) | `cd llama.cpp && cp config.env.example config.env && bash bootstrap.sh` |
 
 - `bashrc-backup/install.bash` deletes the `# CUSTOM START` … `# CUSTOM END` block from `~/.bashrc`, appends the new block at the end, then calls `exec bash -l` to reload the shell.
 - `opencode-backup/install.sh` copies `opencode.jsonc` to `~/.config/opencode/opencode.jsonc` (creates dir if needed).
@@ -91,8 +101,19 @@ tooling/
 - Custom commands: `claude-backup/.claude/commands/commit-push.md`
 - Skills: `c4-devops-ticket` (Jira ticket creation for DO project)
 
+## llama.cpp config notes
+
+- Linux/Pop!_OS adaptation of `countzero/windows_llama.cpp`; **Vulkan** backend, **prebuilt** binaries (no compiler/conda).
+- Scope: run already-built GGUF models only (no quantization/conversion).
+- `bootstrap.sh` downloads `llama-<tag>-bin-ubuntu-vulkan-<arch>.tar.gz` into `vendor/` (idempotent, `--force` to reinstall).
+- `download-model.sh` pulls GGUFs to `$LLAMA_MODELS_DIR` (default `~/.local/share/llama.cpp/models`, outside the repo); prefers `hf`/`huggingface-cli`, falls back to `curl`; manifest `models.list`.
+- `server.sh`: router mode (default, `presets/models.ini`) or single model; serves OpenAI-compatible API at `LLAMA_HOST:LLAMA_PORT` (default `127.0.0.1:8081`).
+- Config in `config.env` (gitignored; copy from `config.env.example`).
+- Models are **never** committed: `.gitignore` excludes `llama.cpp/{vendor,cache}/`, `config.env`, `presets/models.ini`, and `**/*.gguf`.
+- OpenCode: on native Linux set the `llama.cpp` provider `baseURL` to `http://127.0.0.1:8081/v1` (the `172.30.48.1` value is a WSL→Windows-host gateway).
+
 ## Conventions
 
 - This repo is a dotfiles/config backup, not a software project. Do not add build tooling or tests.
-- `.gitignore` excludes `.claude/settings.local.json` and `.playwright-mcp`.
-- Fresh machine setup order: SSH → clone repo → `bashrc-backup/install.bash` → Claude Code → `claude-backup/install.sh` → `opencode-backup/install.sh` → authenticate MCPs.
+- `.gitignore` excludes `.claude/settings.local.json`, `.playwright-mcp`, and the llama.cpp `vendor/`, `cache/`, `config.env`, `presets/models.ini`, and `*.gguf`.
+- Fresh machine setup order: SSH → clone repo → `bashrc-backup/install.bash` → Claude Code → `claude-backup/install.sh` → `opencode-backup/install.sh` → authenticate MCPs → (optional) `llama.cpp/bootstrap.sh`.

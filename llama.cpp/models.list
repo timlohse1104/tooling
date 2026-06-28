@@ -1,0 +1,21 @@
+# HuggingFace download manifest for:  ./download-model.sh --all
+#
+# Format (pipe-separated):   repo_id | filename | dest_subdir
+#   - repo_id      HuggingFace repo, e.g. bartowski/gemma-2-9b-it-GGUF
+#   - filename     file inside that repo, e.g. gemma-2-9b-it-IQ4_XS.gguf
+#   - dest_subdir  optional folder under $LLAMA_MODELS_DIR
+#                  (use ../templates for non-model files like chat templates)
+#
+# Lines starting with # are ignored. Uncomment / add the models you actually use.
+# Downloads land in $LLAMA_MODELS_DIR (OUTSIDE this repo) and are never committed.
+
+# --- Working example from the upstream README (~5 GB) ----------------------
+# bartowski/gemma-2-9b-it-GGUF | gemma-2-9b-it-IQ4_XS.gguf | gemma-2-9b-it
+
+# --- Your models (fill in the correct repo_id for each quant) --------------
+# <repo_id> | Qwen3.6-27B-IQ4_XS-mtp.gguf            | Qwen3.6-27B
+# <repo_id> | Qwen3.6-35B-A3B-MTP-IQ4_XS.gguf        | Qwen3.6-35B-A3B
+# <repo_id> | gemma-4-26B-A4B-it-qat-UD-Q4_K_XL.gguf | gemma-4-26B-A4B
+
+# --- Optional: Qwen fixed chat template (referenced by presets) ------------
+# froggeric/Qwen-Fixed-Chat-Templates | chat_template.jinja | ../templates

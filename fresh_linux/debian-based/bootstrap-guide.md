@@ -112,7 +112,30 @@ A step-by-step checklist for setting up a new system from scratch.
 
 ---
 
-## 11. Weitere Schritte
+## 11. llama.cpp – lokale LLM-Inferenz (Vulkan, optional)
+
+- [ ] Setup ausführen (prebuilt Vulkan-Binary, kein Compiler nötig):
+  ```bash
+  cd ~/tooling/llama.cpp
+  cp config.env.example config.env      # Version/Port/Pfade anpassen
+  bash bootstrap.sh                     # lädt + verifiziert llama.cpp (Vulkan)
+  ```
+- [ ] Modell(e) laden (Manifest `models.list` editieren, dann):
+  ```bash
+  bash download-model.sh --all          # nach $LLAMA_MODELS_DIR (außerhalb Repo)
+  ```
+- [ ] Router-Preset anlegen und starten:
+  ```bash
+  cp presets/models.example.ini presets/models.ini
+  sed -i "s|/home/USER|$HOME|g" presets/models.ini
+  bash server.sh                        # http://127.0.0.1:8081
+  ```
+- [ ] In `~/.config/opencode/opencode.jsonc` die `llama.cpp`-`baseURL` auf
+  `http://127.0.0.1:8081/v1` setzen (statt `172.30.48.1`).
+
+---
+
+## 12. Weitere Schritte
 
 > Platzhalter für zusätzliche Einrichtungsschritte.
 

@@ -1,2 +1,9 @@
 .claude/settings.local.json
 .playwright-mcp
+
+# llama.cpp: binaries, downloads, machine-specific config, and models
+llama.cpp/vendor/
+llama.cpp/cache/
+llama.cpp/config.env
+llama.cpp/presets/models.ini
+llama.cpp/**/*.gguf
