@@ -87,8 +87,9 @@ tooling/
 
 ## OpenCode config notes
 
-- Default model: `Qwen3.6-27B-IQ4_XS-mtp.gguf` (local llama.cpp at `172.30.48.1:8081`)
-- Additional local models: `Qwen3.6-35B-A3B-MTP-IQ4_XS.gguf`, `gemma-4-26B-A4B-it-UD-Q4_K_XL.gguf` (llama.cpp); `qwen3.6-35b-a3b` (LM Studio at `192.168.1.169:1234`)
+- Default model: `gemma-4-26B-A4B-it-qat-UD-Q4_K_XL.gguf` (local llama.cpp at `172.30.48.1:8081`)
+- Additional local models: `Qwen3.6-27B-IQ4_XS-mtp.gguf`, `Qwen3.6-35B-A3B-MTP-IQ4_XS.gguf`, `ornith-1.0-9b-Q8_0.gguf`, `ornith-1.0-35b-Q4_K_M.gguf` (llama.cpp); `qwen3.6-35b-a3b` (LM Studio at `192.168.1.169:1234`)
+- Ornith-1.0 (DeepReinforce, MIT, agentic coding): 9B dense Q8_0 @ 262k ctx full-VRAM on the 7900 XTX; 35B MoE Q4_K_M @ 32k ctx tight-VRAM. Both use `--jinja` for reasoning/tool-calling.
 - Enabled providers: `lmstudio`, `llama.cpp`, `anthropic`
 - Plugin: `opencode-claude-auth@latest`; `share: disabled`
 - Read permission: `.env` and `.env.*` denied; `.env.example` / `.env.default` allowed
@@ -111,6 +112,7 @@ tooling/
 - Config in `config.env` (gitignored; copy from `config.env.example`).
 - Models are **never** committed: `.gitignore` excludes `llama.cpp/{vendor,cache}/`, `config.env`, `presets/models.ini`, and `**/*.gguf`.
 - OpenCode: on native Linux set the `llama.cpp` provider `baseURL` to `http://127.0.0.1:8081/v1` (the `172.30.48.1` value is a WSL→Windows-host gateway).
+- Skill `.claude/skills/llama-preset/` (`scripts/recommend.sh`): generates/updates a `presets/models.ini` `[section]` tuned to the detected hardware (GPU/VRAM via `llama-server --list-devices`, autosizing via `llama-fit-params`, iGPU deprioritized); resolves the HuggingFace model card from `models.list` (`--hf-url`) and folds in vendor best practices via `--extra KEY=VALUE` — hardware-owned keys (`device`, `n-gpu-layers`, `n-cpu-moe`, `ctx-size`, `flash-attn`, `cache-type-k/v`, `jinja`) are never overridden.
 
 ## Conventions
 

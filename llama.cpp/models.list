@@ -9,13 +9,20 @@
 # Lines starting with # are ignored. Uncomment / add the models you actually use.
 # Downloads land in $LLAMA_MODELS_DIR (OUTSIDE this repo) and are never committed.
 
-# --- Working example from the upstream README (~5 GB) ----------------------
-# bartowski/gemma-2-9b-it-GGUF | gemma-2-9b-it-IQ4_XS.gguf | gemma-2-9b-it
+# --- Your models -----------------------------------------------------------
+# NOTE: unsloth's MTP repos publish files without an "-mtp" suffix; the MTP
+# variant is encoded in the repo name. Your local presets/OpenCode config use
+# the names Qwen3.6-27B-IQ4_XS-mtp.gguf and Qwen3.6-35B-A3B-MTP-IQ4_XS.gguf —
+# rename or symlink after download to match (or update the configs).
+unsloth/Qwen3.6-27B-MTP-GGUF       | Qwen3.6-27B-IQ4_XS.gguf            | Qwen3.6-27B
+unsloth/Qwen3.6-35B-A3B-MTP-GGUF   | Qwen3.6-35B-A3B-UD-IQ4_XS.gguf     | Qwen3.6-35B-A3B
+unsloth/gemma-4-26B-A4B-it-qat-GGUF | gemma-4-26B-A4B-it-qat-UD-Q4_K_XL.gguf | gemma-4-26B-A4B
 
-# --- Your models (fill in the correct repo_id for each quant) --------------
-# <repo_id> | Qwen3.6-27B-IQ4_XS-mtp.gguf            | Qwen3.6-27B
-# <repo_id> | Qwen3.6-35B-A3B-MTP-IQ4_XS.gguf        | Qwen3.6-35B-A3B
-# <repo_id> | gemma-4-26B-A4B-it-qat-UD-Q4_K_XL.gguf | gemma-4-26B-A4B
+# --- Ornith-1.0 (DeepReinforce, MIT) — agentic coding ----------------------
+# 9B dense  : full-VRAM fit at Q8_0 + 262k ctx with q8_0 KV-cache
+# 35B MoE   : Q4_K_M (21.2 GB) sweet spot for 24 GB VRAM at ~32k ctx
+deepreinforce-ai/Ornith-1.0-9B-GGUF  | ornith-1.0-9b-Q8_0.gguf      | Ornith-1.0-9B
+deepreinforce-ai/Ornith-1.0-35B-GGUF | ornith-1.0-35b-Q4_K_M.gguf   | Ornith-1.0-35B
 
 # --- Optional: Qwen fixed chat template (referenced by presets) ------------
 # froggeric/Qwen-Fixed-Chat-Templates | chat_template.jinja | ../templates

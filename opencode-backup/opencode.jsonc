@@ -146,9 +146,17 @@
         "gemma-4-26B-A4B-it-qat-UD-Q4_K_XL.gguf": {
           "name": "Gemma 4 26B-A4B (Q4_K_XL)",
           "modalities": {"input": ["text", "image"], "output": ["text"]}
+        },
+        "ornith-1.0-9b-Q8_0.gguf": {
+          "name": "Ornith 1.0 9B Dense (Q8_0, 262k ctx)",
+          "modalities": {"input": ["text"], "output": ["text"]}
+        },
+        "ornith-1.0-35b-Q4_K_M.gguf": {
+          "name": "Ornith 1.0 35B MoE (Q4_K_M, 32k ctx)",
+          "modalities": {"input": ["text"], "output": ["text"]}
         }
       },
-      "whitelist": ["Qwen3.6-27B-IQ4_XS-mtp.gguf", "Qwen3.6-35B-A3B-MTP-IQ4_XS.gguf", "gemma-4-26B-A4B-it-qat-UD-Q4_K_XL.gguf"]
+      "whitelist": ["Qwen3.6-27B-IQ4_XS-mtp.gguf", "Qwen3.6-35B-A3B-MTP-IQ4_XS.gguf", "gemma-4-26B-A4B-it-qat-UD-Q4_K_XL.gguf", "ornith-1.0-9b-Q8_0.gguf", "ornith-1.0-35b-Q4_K_M.gguf"]
     }
   }
 }
