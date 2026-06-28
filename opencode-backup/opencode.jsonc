@@ -115,18 +115,6 @@
     }
   },
   "provider": {
-    "lmstudio": {
-      "npm": "@ai-sdk/openai-compatible",
-      "name": "LM Studio",
-      "options": {
-        "baseURL": "http://192.168.1.169:1234/v1",
-        "apiKey": "lm-studio"
-      },
-      "models": {
-        "qwen3.6-35b-a3b": {"name": "Qwen3.6 35B A3B UD", "modalities": {"input": ["text", "image"], "output": ["text"]}}
-      },
-      "whitelist": ["qwen3.6-35b-a3b"]
-    },
     "llama.cpp": {
       "npm": "@ai-sdk/openai-compatible",
       "name": "llama.cpp (local)",
@@ -148,11 +136,11 @@
           "modalities": {"input": ["text", "image"], "output": ["text"]}
         },
         "ornith-1.0-9b-Q8_0.gguf": {
-          "name": "Ornith 1.0 9B Dense (Q8_0, 262k ctx)",
+          "name": "Ornith 1.0 9B Dense (Q8_0)",
           "modalities": {"input": ["text"], "output": ["text"]}
         },
         "ornith-1.0-35b-Q4_K_M.gguf": {
-          "name": "Ornith 1.0 35B MoE (Q4_K_M, 32k ctx)",
+          "name": "Ornith 1.0 35B MoE (Q4_K_M)",
           "modalities": {"input": ["text"], "output": ["text"]}
         }
       },
