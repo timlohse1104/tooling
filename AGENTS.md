@@ -87,7 +87,7 @@ tooling/
 
 ## OpenCode config notes
 
-- Default model: `gemma-4-26B-A4B-it-qat-UD-Q4_K_XL.gguf` (local llama.cpp at `172.30.48.1:8081`)
+- Default model: `gemma-4-26B-A4B-it-qat-UD-Q4_K_XL.gguf` (local llama.cpp at `127.0.0.1:8081`)
 - Additional local models: `Qwen3.6-27B-IQ4_XS-mtp.gguf`, `Qwen3.6-35B-A3B-MTP-IQ4_XS.gguf`, `ornith-1.0-9b-Q8_0.gguf`, `ornith-1.0-35b-Q4_K_M.gguf` (llama.cpp); `qwen3.6-35b-a3b` (LM Studio at `192.168.1.169:1234`)
 - Ornith-1.0 (DeepReinforce, MIT, agentic coding): 9B dense Q8_0 @ 262k ctx full-VRAM on the 7900 XTX; 35B MoE Q4_K_M @ 32k ctx tight-VRAM. Both use `--jinja` for reasoning/tool-calling.
 - Enabled providers: `lmstudio`, `llama.cpp`, `anthropic`

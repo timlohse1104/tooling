@@ -119,7 +119,7 @@
       "npm": "@ai-sdk/openai-compatible",
       "name": "llama.cpp (local)",
       "options": {
-        "baseURL": "http://172.30.48.1:8081/v1",
+        "baseURL": "http://127.0.0.1:8081/v1",
         "apiKey": "no-key"
       },
       "models": {
