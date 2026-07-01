@@ -191,6 +191,58 @@ are kept aligned with that config.
 scripts, `*.example` templates, `models.list`, and `presets/models.example.ini`
 are committed.
 
+## Vision-language / OCR models (Unlimited-OCR)
+
+`models.list` includes Baidu's **Unlimited-OCR** (3B VLM, DeepSeek-OCR
+architecture). Vision-capable models need a separate **multimodal projector**
+(`mmproj-*.gguf`) alongside the LM GGUF. The committed preset entry references
+both:
+
+```sh
+bash download-model.sh --all     # pulls Unlimited-OCR-Q4_K_M.gguf + mmproj
+bash server.sh                   # router serves model alias "Unlimited-OCR"
+```
+
+DeepSeek-OCR support is upstream since llama.cpp PR
+[#17400](https://github.com/ggml-org/llama.cpp/pull/17400) (merged 2026-03-25);
+release `b9827` (and later) Vulkan prebuilts contain it. Per the PR maintainer,
+do **not** set `--chat-template deepseek-ocr` on the server — the embedded Jinja
+template is used automatically.
+
+Call it via the OpenAI-compatible API with a base64 `image_url` part:
+
+```sh
+IMG=$(base64 -w0 document.png)
+curl http://127.0.0.1:8081/v1/chat/completions \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "Unlimited-OCR",
+    "temperature": 0,
+    "messages": [{"role":"user","content":[
+      {"type":"text","text":"<|grounding|>OCR markdown"},
+      {"type":"image_url","image_url":{"url":"data:image/png;base64,'"$IMG"'"}}
+    ]}]
+  }'
+```
+
+Useful prompts:
+
+| Prompt | Output |
+|--------|--------|
+| `OCR` | plain text only |
+| `OCR markdown` | layout-aware Markdown |
+| `<|grounding|>OCR` | text + `<|det|>… [x1,y1,x2,y2]<|/det|>` bounding boxes |
+| `<|grounding|>OCR markdown` | Markdown with grounding boxes |
+
+For one-shot CLI use without the router, `llama-mtmd-cli` works too:
+
+```sh
+./vendor/llama.cpp/llama-b9827/llama-mtmd-cli \
+  -m ~/.local/share/llama.cpp/models/Unlimited-OCR/Unlimited-OCR-Q4_K_M.gguf \
+  --mmproj ~/.local/share/llama.cpp/models/Unlimited-OCR/mmproj-Unlimited-OCR-F16.gguf \
+  --image document.png -p "<|grounding|>OCR markdown" --temp 0
+```
+
 ## Troubleshooting
 
 - **`GLIBC_x.xx not found`** — the prebuilt is built on a newer Ubuntu than your

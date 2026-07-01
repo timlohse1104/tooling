@@ -11,6 +11,7 @@ No build system, no tests, no CI. All content is documentation and shell scripts
 ```
 tooling/
 ├── README.md                        # Curated tool/service link list
+├── visualize-uocr.py                # Render Unlimited-OCR grounding output as HTML
 ├── bashrc-backup/                   # Bash config to deploy to ~
 │   ├── .bashrc                      # PS1 + sources aliases/functions
 │   ├── .bashrc-aliases              # All shell aliases
@@ -88,8 +89,9 @@ tooling/
 ## OpenCode config notes
 
 - Default model: `gemma-4-26B-A4B-it-qat-UD-Q4_K_XL.gguf` (local llama.cpp at `127.0.0.1:8081`)
-- Additional local models: `Qwen3.6-27B-IQ4_XS-mtp.gguf`, `Qwen3.6-35B-A3B-MTP-IQ4_XS.gguf`, `ornith-1.0-9b-Q8_0.gguf`, `ornith-1.0-35b-Q4_K_M.gguf` (llama.cpp); `qwen3.6-35b-a3b` (LM Studio at `192.168.1.169:1234`)
+- Additional local models: `Qwen3.6-27B-IQ4_XS.gguf`, `Qwen3.6-35B-A3B-UD-IQ4_XS.gguf`, `ornith-1.0-9b-Q8_0.gguf`, `ornith-1.0-35b-Q4_K_M.gguf`, `Unlimited-OCR` (llama.cpp); `qwen3.6-35b-a3b` (LM Studio at `192.168.1.169:1234`)
 - Ornith-1.0 (DeepReinforce, MIT, agentic coding): 9B dense Q8_0 @ 262k ctx full-VRAM on the 7900 XTX; 35B MoE Q4_K_M @ 32k ctx tight-VRAM. Both use `--jinja` for reasoning/tool-calling.
+- Unlimited-OCR (Baidu, MIT, VLM): 3B DeepSeek-OCR-architecture model for one-shot long-horizon document parsing. Needs both `Unlimited-OCR-Q4_K_M.gguf` and `mmproj-Unlimited-OCR-F16.gguf` (preset key `mmproj = …`). Upstream support via PR #17400 (merged 2026-03-25), included in b9827. Prompts: `OCR`, `OCR markdown`, `<|grounding|>OCR` (with bboxes). Do NOT set `chat-template = deepseek-ocr` on the server.
 - Enabled providers: `lmstudio`, `llama.cpp`, `anthropic`
 - Plugin: `opencode-claude-auth@latest`; `share: disabled`
 - Read permission: `.env` and `.env.*` denied; `.env.example` / `.env.default` allowed

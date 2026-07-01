@@ -11,9 +11,8 @@
 
 # --- Your models -----------------------------------------------------------
 # NOTE: unsloth's MTP repos publish files without an "-mtp" suffix; the MTP
-# variant is encoded in the repo name. Your local presets/OpenCode config use
-# the names Qwen3.6-27B-IQ4_XS-mtp.gguf and Qwen3.6-35B-A3B-MTP-IQ4_XS.gguf —
-# rename or symlink after download to match (or update the configs).
+# variant is encoded in the repo name. Filenames below match exactly what
+# huggingface serves — presets/OpenCode reference these names directly.
 unsloth/Qwen3.6-27B-MTP-GGUF       | Qwen3.6-27B-IQ4_XS.gguf            | Qwen3.6-27B
 unsloth/Qwen3.6-35B-A3B-MTP-GGUF   | Qwen3.6-35B-A3B-UD-IQ4_XS.gguf     | Qwen3.6-35B-A3B
 unsloth/gemma-4-26B-A4B-it-qat-GGUF | gemma-4-26B-A4B-it-qat-UD-Q4_K_XL.gguf | gemma-4-26B-A4B
@@ -23,6 +22,15 @@ unsloth/gemma-4-26B-A4B-it-qat-GGUF | gemma-4-26B-A4B-it-qat-UD-Q4_K_XL.gguf | g
 # 35B MoE   : Q4_K_M (21.2 GB) sweet spot for 24 GB VRAM at ~32k ctx
 deepreinforce-ai/Ornith-1.0-9B-GGUF  | ornith-1.0-9b-Q8_0.gguf      | Ornith-1.0-9B
 deepreinforce-ai/Ornith-1.0-35B-GGUF | ornith-1.0-35b-Q4_K_M.gguf   | Ornith-1.0-35B
+
+# --- Unlimited-OCR (Baidu, MIT) — VLM, one-shot long-horizon doc parsing ---
+# 3B VLM on DeepSeek-OCR architecture (SAM+CLIP DeepEncoder + DeepSeek-V2 MoE).
+# Needs BOTH the LM GGUF *and* the F16 vision projector (mmproj). DeepSeek-OCR
+# support landed in llama.cpp master via PR #17400 (merged 2026-03-25); the
+# installed b9827 Vulkan prebuilt contains it. Run via llama-server with
+# --mmproj or llama-mtmd-cli; clients send images as base64 image_url parts.
+sahilchachra/Unlimited-OCR-GGUF    | Unlimited-OCR-Q8_0.gguf            | Unlimited-OCR
+sahilchachra/Unlimited-OCR-GGUF    | mmproj-Unlimited-OCR-F16.gguf      | Unlimited-OCR
 
 # --- Optional: Qwen fixed chat template (referenced by presets) ------------
 # froggeric/Qwen-Fixed-Chat-Templates | chat_template.jinja | ../templates
