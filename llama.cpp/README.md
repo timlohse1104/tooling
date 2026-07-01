@@ -10,6 +10,11 @@ Config-driven setup to run **already-built GGUF models** with llama.cpp on the
   (`$LLAMA_MODELS_DIR`) and are **never committed** to git.
 - Multi-model **router mode** via an INI preset (same format as upstream), so one
   endpoint serves several models on demand.
+- **Windows PowerShell** is supported too: `bootstrap.ps1` / `download-model.ps1`
+  / `server.ps1` are one-to-one equivalents of the `.sh` scripts. On Windows they
+  target **NVIDIA/CUDA** (the Windows box has an RTX 4090); the `.sh` scripts stay
+  on **Vulkan** (the Linux box has an AMD RX 7900 XTX). See the
+  [Windows (PowerShell)](#windows-powershell) section.
 
 See `PLAN.md` for the design rationale and the Windows→Linux mapping.
 
@@ -17,18 +22,29 @@ See `PLAN.md` for the design rationale and the Windows→Linux mapping.
 
 ```
 llama.cpp/
-├── bootstrap.sh            # install prebuilt Vulkan llama.cpp into ./vendor
-├── download-model.sh       # fetch GGUF(s) from HuggingFace into $LLAMA_MODELS_DIR
-├── server.sh               # start llama-server (router or single model)
-├── config.env.example      # copy to config.env and edit            [committed]
-├── config.env              # your real values                       [gitignored]
-├── models.list             # HuggingFace download manifest          [committed]
+├── bootstrap.sh            # Linux (Vulkan):   install prebuilt llama.cpp into ./vendor
+├── download-model.sh       # Linux:            fetch GGUF(s) from HuggingFace into $LLAMA_MODELS_DIR
+├── server.sh               # Linux:            start llama-server (router or single model)
+├── bootstrap.ps1           # Windows (CUDA):   install prebuilt llama.cpp + cudart into .\vendor
+├── download-model.ps1      # Windows:          fetch GGUF(s) from HuggingFace into $LLAMA_MODELS_DIR
+├── server.ps1              # Windows:          start llama-server (router or single model)
+├── config.env.example      # Linux:   copy to config.env and edit    [committed]
+├── config.env              # Linux:   your real values               [gitignored]
+├── config.ps1.example      # Windows: copy to config.ps1 and edit    [committed]
+├── config.ps1              # Windows: your real values               [gitignored]
+├── models.list             # HuggingFace download manifest (shared)  [committed]
 ├── presets/
-│   ├── models.example.ini  # router preset template                 [committed]
-│   └── models.ini          # your real preset                       [gitignored]
-├── vendor/                 # extracted binaries                     [gitignored]
-└── cache/                  # downloaded tarballs                    [gitignored]
+│   ├── models.example.ini  # router preset template (shared)         [committed]
+│   └── models.ini          # your real preset                        [gitignored]
+├── vendor/                 # extracted binaries                      [gitignored]
+└── cache/                  # downloaded archives                     [gitignored]
 ```
+
+The `.sh` scripts (Linux) and `.ps1` scripts (Windows PowerShell) are functional
+equivalents and share `models.list`, `presets/`, `vendor/`, and `cache/`. They
+differ in two ways: the config file (`config.env` for bash vs `config.ps1` for
+PowerShell) and the compute backend they install — `.sh` fetches the **Vulkan**
+build, `.ps1` fetches the **CUDA** build plus its cudart runtime.
 
 Models live under `$LLAMA_MODELS_DIR` (default `~/.local/share/llama.cpp/models`),
 **not** inside this repo.
@@ -158,11 +174,72 @@ Single-model mode auto-detects physical core count and a sibling `mmproj.*` file
 Heavy per-model tuning (`n-cpu-moe`, `cache-type-*`, sampling, speculative
 decoding, …) belongs in the preset INI.
 
-## Configuration (`config.env`)
+## Windows (PowerShell)
+
+The `.ps1` scripts mirror the `.sh` scripts one-to-one, but target **NVIDIA/CUDA**
+(the Windows box has an RTX 4090). `bootstrap.ps1` fetches the prebuilt Windows
+CUDA zip (`llama-<tag>-bin-win-cuda-<ver>-x64.zip`) **and** the matching CUDA
+runtime (`cudart-llama-bin-win-cuda-<ver>-x64.zip`), extracting the cudart DLLs
+next to the binaries. No compiler/CMake/conda. (The `.sh` scripts stay on Vulkan
+for the Linux/AMD box.)
+
+Requirements: Windows 10/11 x64, PowerShell 5.1+ (or PowerShell 7), a current
+**NVIDIA driver** (new enough for the chosen CUDA version — 12.4 is the safe
+default, 13.3 needs a recent driver), and the
+[Microsoft Visual C++ Redistributable (x64)](https://aka.ms/vs/17/release/vc_redist.x64.exe).
+
+```powershell
+cd $HOME\tooling\llama.cpp
+
+# If scripts are blocked, allow local scripts for this session:
+Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
+
+Copy-Item config.ps1.example config.ps1     # set version / port / paths / $LLAMA_CUDA
+.\bootstrap.ps1                              # fetch CUDA build + cudart, then verify
+
+# choose & download a model (edit models.list, then):
+.\download-model.ps1 -All                    # or: .\download-model.ps1 <repo> <file> [subdir]
+
+# configure serving — copy the preset and rewrite the placeholder paths to your
+# models dir (llama.cpp accepts forward slashes on Windows):
+$dst = ($env:LOCALAPPDATA -replace '\\','/') + '/llama.cpp/models'
+(Get-Content presets\models.example.ini) `
+    -replace '/home/USER/.local/share/llama.cpp/models', $dst |
+    Set-Content presets\models.ini
+
+.\server.ps1                                 # router @ http://127.0.0.1:8081
+```
+
+Script reference (identical semantics to the `.sh` versions):
+
+| Windows | Purpose |
+|---------|---------|
+| `.\bootstrap.ps1 [-Force]` | install/refresh the prebuilt Windows **CUDA** release (+ cudart runtime) into `.\vendor` |
+| `.\download-model.ps1 <repo> <file> [subdir]` / `-All` / `-List` | pull GGUF(s) into `$LLAMA_MODELS_DIR` |
+| `.\server.ps1` / `.\server.ps1 <model.gguf> [args]` / `.\server.ps1 -List` | router mode / single model / list models |
+
+Notes:
+- Config lives in `config.ps1` (PowerShell variables), the counterpart of
+  `config.env`. `$LLAMA_CUDA` selects the CUDA build (`12.4` or `13.3`); default
+  model dir is `%LOCALAPPDATA%\llama.cpp\models`.
+- The router preset and its `n-gpu-layers` / `cache-type-*` / `flash-attn` keys
+  are backend-agnostic and work unchanged on CUDA (the `7900 XTX` mentions in
+  `models.example.ini` are only comments).
+- Downloads prefer `hf`/`huggingface-cli` if installed, else `curl.exe`
+  (bundled with Windows 10+), else `Invoke-WebRequest`.
+- Binaries extract to `vendor\llama.cpp\` (cudart DLLs beside `llama-server.exe`);
+  a `vendor\.llama-version-win` marker (`<tag>-cuda-<ver>-x64`) makes re-runs
+  idempotent. `-Force` reinstalls; changing `$LLAMA_CUDA` also triggers a reinstall.
+- If `llama-server.exe` fails to start with a missing-DLL error, install the
+  VC++ Redistributable linked above.
+
+## Configuration (`config.env` / `config.ps1`)
 
 | Variable | Meaning |
 |----------|---------|
 | `LLAMA_VERSION` | release tag (e.g. `b9827`) or `latest` |
+| `LLAMA_BACKEND` | `vulkan` (bash/Linux) or `cuda` (PowerShell/Windows) |
+| `LLAMA_CUDA` | Windows only: CUDA build to fetch (`12.4` or `13.3`) |
 | `LLAMA_MODELS_DIR` | model storage **outside** the repo |
 | `LLAMA_HOST` / `LLAMA_PORT` | server bind address (default `127.0.0.1:8081`) |
 | `LLAMA_PRESET` | router preset path, relative to `llama.cpp/` |
@@ -186,10 +263,10 @@ are kept aligned with that config.
 
 ## What is gitignored
 
-`vendor/`, `cache/`, `config.env`, `presets/models.ini`, and any `*.gguf` under
-`llama.cpp/`. Models live outside the repo entirely and are never tracked. Only
-scripts, `*.example` templates, `models.list`, and `presets/models.example.ini`
-are committed.
+`vendor/`, `cache/`, `config.env`, `config.ps1`, `presets/models.ini`, and any
+`*.gguf` under `llama.cpp/`. Models live outside the repo entirely and are never
+tracked. Only scripts (`*.sh` + `*.ps1`), `*.example` templates, `models.list`,
+and `presets/models.example.ini` are committed.
 
 ## Vision-language / OCR models (Unlimited-OCR)
 
@@ -253,3 +330,14 @@ For one-shot CLI use without the router, `llama-mtmd-cli` works too:
 - **HTTP 401/403 on download** — gated model; set `HF_TOKEN` or `hf auth login`.
 - **`error: unknown argument: --models-preset`** — your llama-server is too old;
   bump `LLAMA_VERSION` and re-run `bootstrap.sh --force`.
+
+Windows (CUDA):
+- **`cudart64_*.dll` / `cublas64_*.dll` not found`** — the cudart runtime is
+  missing beside `llama-server.exe`; re-run `.\bootstrap.ps1 -Force`.
+- **CUDA error / exe exits immediately** — the NVIDIA driver is too old for the
+  chosen CUDA build. Set `$LLAMA_CUDA = "12.4"` in `config.ps1` (widest driver
+  compatibility) and re-run `.\bootstrap.ps1 -Force`, or update the driver.
+- **`nvidia-smi not found`** — no NVIDIA driver installed; the CUDA build needs
+  one (there is no CPU fallback in the CUDA-only binary path for GPU ops).
+- **VCRUNTIME140.dll missing** — install the VC++ x64 Redistributable
+  ([link](https://aka.ms/vs/17/release/vc_redist.x64.exe)).

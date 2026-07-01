@@ -1,0 +1,43 @@
+# ============================================================================
+# llama.cpp Windows config  —  copy to "config.ps1" and adjust.
+# Dot-sourced by bootstrap.ps1, download-model.ps1 and server.ps1.
+# The scripts auto-detect their own location; you only set values here.
+# config.ps1 is gitignored (machine-specific); this .example is committed.
+#
+# This is the PowerShell counterpart of config.env (used by the *.sh scripts).
+# NOTE: the *.ps1 scripts target NVIDIA/CUDA (this box has an RTX 4090), while
+# the *.sh scripts target Vulkan (the Linux box has an AMD RX 7900 XTX).
+# ============================================================================
+
+# llama.cpp release to install: a tag like "b9859", or "latest".
+$LLAMA_VERSION = "b9859"
+
+# Compute backend of the prebuilt binary (this setup targets CUDA on Windows).
+$LLAMA_BACKEND = "cuda"
+
+# CUDA toolkit version of the prebuilt to fetch. llama.cpp publishes Windows
+# builds for "12.4" and "13.3". 12.4 has the broadest driver compatibility;
+# pick "13.3" only if you run a very recent NVIDIA driver. bootstrap.ps1 also
+# downloads the matching cudart runtime zip and extracts it beside the binaries.
+$LLAMA_CUDA = "12.4"
+
+# Where GGUF models live  —  OUTSIDE this repo, never committed.
+# Windows default: %LOCALAPPDATA%\llama.cpp\models
+$LLAMA_MODELS_DIR = "$env:LOCALAPPDATA\llama.cpp\models"
+
+# llama-server network binding.
+$LLAMA_HOST = "127.0.0.1"
+$LLAMA_PORT = "8081"
+
+# Router mode (multi-model): preset file (relative to llama.cpp\) + max loaded.
+$LLAMA_PRESET = "presets\models.ini"
+$LLAMA_MODELS_MAX = "1"
+
+# Single-model mode defaults (override per run, e.g.
+#   $env:LLAMA_CTX=8192; .\server.ps1 m.gguf ).
+$LLAMA_NGL = "999"     # GPU layers to offload (999 = all; clamped automatically)
+$LLAMA_CTX = "0"       # context size (0 = use the model's trained context)
+$LLAMA_KV  = "f16"     # KV cache type: f32, f16, q8_0, q4_0
+
+# Optional: HuggingFace token for gated/private downloads (or run 'hf auth login').
+$HF_TOKEN = ""
