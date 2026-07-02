@@ -5,5 +5,6 @@
 llama.cpp/vendor/
 llama.cpp/cache/
 llama.cpp/config.env
+llama.cpp/config.ps1
 llama.cpp/presets/models.ini
 llama.cpp/**/*.gguf
