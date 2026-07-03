@@ -1,0 +1,5 @@
+# Keep shell scripts LF-only so they run on Linux (this repo is Linux tooling).
+# Prevents "set: pipefail: invalid option name" from CRLF-terminated scripts.
+# (.ps1 files are intentionally left unmanaged so they keep their CRLF endings.)
+*.sh    text eol=lf
+*.bash  text eol=lf

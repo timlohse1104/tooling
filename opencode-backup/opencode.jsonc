@@ -142,9 +142,17 @@
         "ornith-1.0-35b-Q4_K_M.gguf": {
           "name": "Ornith 1.0 35B MoE (Q4_K_M)",
           "modalities": {"input": ["text"], "output": ["text"]}
+        },
+        "Qwen-AgentWorld-35B-A3B-UD-IQ4_XS.gguf": {
+          "name": "Qwen-AgentWorld 35B-A3B World Model (IQ4_XS)",
+          "modalities": {"input": ["text"], "output": ["text"]}
+        },
+        "gemma-4-31B-it-qat-UD-Q4_K_XL.gguf": {
+          "name": "Gemma 4 31B Dense QAT + MTP (Q4_K_XL)",
+          "modalities": {"input": ["text", "image"], "output": ["text"]}
         }
       },
-      "whitelist": ["Qwen3.6-27B-IQ4_XS.gguf", "Qwen3.6-35B-A3B-UD-IQ4_XS.gguf", "gemma-4-26B-A4B-it-qat-UD-Q4_K_XL.gguf", "ornith-1.0-9b-Q8_0.gguf", "ornith-1.0-35b-Q4_K_M.gguf"]
+      "whitelist": ["Qwen3.6-27B-IQ4_XS.gguf", "Qwen3.6-35B-A3B-UD-IQ4_XS.gguf", "gemma-4-26B-A4B-it-qat-UD-Q4_K_XL.gguf", "ornith-1.0-9b-Q8_0.gguf", "ornith-1.0-35b-Q4_K_M.gguf", "Qwen-AgentWorld-35B-A3B-UD-IQ4_XS.gguf", "gemma-4-31B-it-qat-UD-Q4_K_XL.gguf"]
     }
   }
 }
