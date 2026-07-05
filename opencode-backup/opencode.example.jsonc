@@ -1,8 +1,9 @@
 {
   "$schema": "https://opencode.ai/config.json",
+  "model": "gemma-4-26B-A4B-it-qat-UD-Q4_K_XL.gguf",
   "autoupdate": true,
   "plugin": ["opencode-claude-auth@latest"],
-  "enabled_providers": ["lieselotte", "hermine", "anthropic"],
+  "enabled_providers": ["lmstudio", "llama.cpp", "anthropic"],
   "share": "disabled",
   "permission": {
       "*": "ask",
@@ -114,63 +115,44 @@
     }
   },
   "provider": {
-    "lieselotte": {
+    "llama.cpp": {
       "npm": "@ai-sdk/openai-compatible",
-      "name": "llama.cpp (lieselotte)",
+      "name": "llama.cpp (local)",
       "options": {
         "baseURL": "http://127.0.0.1:8081/v1",
         "apiKey": "no-key"
       },
       "models": {
-        "Qwen3.6-27B": {
-          "name": "Qwen3.6 27B Dense MTP",
+        "Qwen3.6-27B-IQ4_XS.gguf": {
+          "name": "Qwen3.6 27B Dense MTP (IQ4_XS)",
           "modalities": {"input": ["text"], "output": ["text"]}
         },
-        "Qwen3.6-35B-A3B": {
-          "name": "Qwen3.6 35B-A3B MoE",
+        "Qwen3.6-35B-A3B-UD-IQ4_XS.gguf": {
+          "name": "Qwen3.6 35B-A3B MoE (IQ4_XS)",
           "modalities": {"input": ["text"], "output": ["text"]}
         },
-        "gemma-4-26B-A4B": {
-          "name": "Gemma 4 26B-A4B",
+        "gemma-4-26B-A4B-it-qat-UD-Q4_K_XL.gguf": {
+          "name": "Gemma 4 26B-A4B (Q4_K_XL)",
           "modalities": {"input": ["text", "image"], "output": ["text"]}
         },
-        "ornith-1.0-9b": {
-          "name": "Ornith 1.0 9B Dense",
+        "ornith-1.0-9b-Q8_0.gguf": {
+          "name": "Ornith 1.0 9B Dense (Q8_0)",
           "modalities": {"input": ["text"], "output": ["text"]}
         },
-        "ornith-1.0-35b": {
-          "name": "Ornith 1.0 35B MoE",
+        "ornith-1.0-35b-Q4_K_M.gguf": {
+          "name": "Ornith 1.0 35B MoE (Q4_K_M)",
           "modalities": {"input": ["text"], "output": ["text"]}
         },
-        "Qwen-AgentWorld-35B-A3B": {
-          "name": "Qwen-AgentWorld 35B-A3B World Model",
+        "Qwen-AgentWorld-35B-A3B-UD-IQ4_XS.gguf": {
+          "name": "Qwen-AgentWorld 35B-A3B World Model (IQ4_XS)",
           "modalities": {"input": ["text"], "output": ["text"]}
         },
-        "gemma-4-31B": {
-          "name": "Gemma 4 31B Dense QAT + MTP",
-          "modalities": {"input": ["text", "image"], "output": ["text"]}
-        }
-      },
-      "whitelist": ["Qwen3.6-27B", "Qwen3.6-35B-A3B", "gemma-4-26B-A4B", "ornith-1.0-9b", "ornith-1.0-35b", "Qwen-AgentWorld-35B-A3B", "gemma-4-31B"]
-    },
-    "hermine": {
-      "npm": "@ai-sdk/openai-compatible",
-      "name": "llama.cpp (hermine)",
-      "options": {
-        "baseURL": "http://hermine:8081/v1",
-        "apiKey": "no-key"
-      },
-      "models": {
-        "Qwen3.6-27B": {
-          "name": "Qwen3.6 27B Dense MTP",
-          "modalities": {"input": ["text"], "output": ["text"]}
-        },
-        "gemma-4-31B": {
-          "name": "Gemma 4 31B Dense QAT + MTP",
+        "gemma-4-31B-it-qat-UD-Q4_K_XL.gguf": {
+          "name": "Gemma 4 31B Dense QAT + MTP (Q4_K_XL)",
           "modalities": {"input": ["text", "image"], "output": ["text"]}
         }
       },
-      "whitelist": ["Qwen3.6-27B", "gemma-4-31B"]
+      "whitelist": ["Qwen3.6-27B-IQ4_XS.gguf", "Qwen3.6-35B-A3B-UD-IQ4_XS.gguf", "gemma-4-26B-A4B-it-qat-UD-Q4_K_XL.gguf", "ornith-1.0-9b-Q8_0.gguf", "ornith-1.0-35b-Q4_K_M.gguf", "Qwen-AgentWorld-35B-A3B-UD-IQ4_XS.gguf", "gemma-4-31B-it-qat-UD-Q4_K_XL.gguf"]
     }
   }
 }

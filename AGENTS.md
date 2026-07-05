@@ -19,7 +19,9 @@ tooling/
 │   └── install.bash                 # Deploys to ~; replaces CUSTOM block
 ├── opencode-backup/
 │   ├── opencode.jsonc               # OpenCode global config
-│   └── install.sh                   # Copies to ~/.config/opencode/
+│   ├── agents/                      # OpenCode primary/subagent markdown defs
+│   │   └── research.md                # Read-only recon/research primary agent
+│   └── install.sh                   # Copies config + agents/ to ~/.config/opencode/
 ├── claude-backup/
 │   ├── .claude/                     # settings.json, mcp.json, commands/, skills/
 │   └── install.sh                   # Copies to ~/.claude/
@@ -46,7 +48,7 @@ tooling/
 | Local llama.cpp (Vulkan) | `cd llama.cpp && cp config.env.example config.env && bash bootstrap.sh` |
 
 - `bashrc-backup/install.bash` deletes the `# CUSTOM START` … `# CUSTOM END` block from `~/.bashrc`, appends the new block at the end, then calls `exec bash -l` to reload the shell.
-- `opencode-backup/install.sh` copies `opencode.jsonc` to `~/.config/opencode/opencode.jsonc` (creates dir if needed).
+- `opencode-backup/install.sh` copies `opencode.jsonc` to `~/.config/opencode/opencode.jsonc` and any `agents/*.md` to `~/.config/opencode/agents/` (creates dirs if needed).
 - `claude-backup/install.sh` copies `settings.json`, `settings.local.json`, `mcp.json`, `commands/`, and `skills/` into `~/.claude/`. Note: `settings.local.json` is in `.gitignore` and won't be present in a fresh clone — the script will fail on that step; ignore or create an empty file first.
 
 ## Key aliases (after install)
@@ -88,13 +90,14 @@ tooling/
 
 ## OpenCode config notes
 
-- Default model: `gemma-4-26B-A4B-it-qat-UD-Q4_K_XL.gguf` (local llama.cpp at `127.0.0.1:8081`)
-- Additional local models: `Qwen3.6-27B-IQ4_XS.gguf`, `Qwen3.6-35B-A3B-UD-IQ4_XS.gguf`, `gemma-4-31B-it-qat-UD-Q4_K_XL.gguf`, `ornith-1.0-9b-Q8_0.gguf`, `ornith-1.0-35b-Q4_K_M.gguf`, `Qwen-AgentWorld-35B-A3B-UD-IQ4_XS.gguf`, `Unlimited-OCR` (llama.cpp); `qwen3.6-35b-a3b` (LM Studio at `192.168.1.169:1234`)
+- No global default `model` is pinned in `opencode.jsonc` (pick per session).
+- Two llama.cpp providers: `lieselotte` (local, `127.0.0.1:8081`) and `hermine` (remote, `hermine:8081`). Model IDs are bare aliases without the `.gguf` suffix.
+- `lieselotte` models: `Qwen3.6-27B`, `Qwen3.6-35B-A3B`, `gemma-4-26B-A4B`, `ornith-1.0-9b`, `ornith-1.0-35b`, `Qwen-AgentWorld-35B-A3B`, `gemma-4-31B`. `hermine` models: `Qwen3.6-27B`, `gemma-4-31B`.
 - Ornith-1.0 (DeepReinforce, MIT, agentic coding): 9B dense Q8_0 @ 262k ctx full-VRAM on the 7900 XTX; 35B MoE Q4_K_M @ 32k ctx tight-VRAM. Both use `--jinja` for reasoning/tool-calling.
 - Qwen-AgentWorld-35B-A3B (Qwen, Apache-2.0, language world model): 35B-A3B MoE (arch `qwen35moe`, base Qwen3.5-35B-A3B) that simulates 7 agent environments (MCP/Search/Terminal/SWE/Android/Web/OS) via long CoT. Hybrid attention (10×(3× Gated-DeltaNet → 1× Gated-Attention)) means only ~10 of 40 layers carry a growing KV-cache, so long contexts are cheap on VRAM. `UD-IQ4_XS` (17.8 GB) full-GPU on the 7900 XTX (`device = Vulkan0`); `q8_0` KV fits the native 262k ctx (drop to 131072 if OOM). Thinking mode on by default → `jinja = true`. Vendor sampling: `temp 0.6`, `top-p 0.95`, `top-k 20`.
 - Gemma 4 31B (Google/unsloth, Apache-2.0, dense QAT VLM): dense 31B (arch `gemma4`, 60 layers, native 256K ctx). Hybrid attention interleaves local sliding-window (1024) layers with periodic global layers (unified K/V + Proportional RoPE), so the growing KV-cache lives only in the few global layers → long contexts are cheap on VRAM. Quantization-aware-trained `UD-Q4_K_XL` (17.3 GB) keeps near-bf16 quality and fits the 24 GB 7900 XTX (`device = Vulkan0`) alongside the ~280 MB MTP drafter `mtp-gemma-4-31B-it.gguf`. MTP speculative decoding is wired via `spec-type = draft-mtp` + `model-draft = …/mtp-gemma-4-31B-it.gguf` + `spec-draft-n-max = 4` (lossless — the target verifies every drafted token). `ctx-size = 131072` in the local preset (native max 262144; raise if VRAM allows, drop/keep q8_0 KV if OOM). Text+Image via optional `mmproj = …/mmproj-F16.gguf`. Vendor sampling: `temp 1.0`, `top-p 0.95`, `top-k 64`; thinking is opt-in via a `<|think|>` token → `jinja = true`.
 - Unlimited-OCR (Baidu, MIT, VLM): 3B DeepSeek-OCR-architecture model for one-shot long-horizon document parsing. Needs both `Unlimited-OCR-Q4_K_M.gguf` and `mmproj-Unlimited-OCR-F16.gguf` (preset key `mmproj = …`). Upstream support via PR #17400 (merged 2026-03-25), included in b9827. Prompts: `OCR`, `OCR markdown`, `<|grounding|>OCR` (with bboxes). Do NOT set `chat-template = deepseek-ocr` on the server.
-- Enabled providers: `lmstudio`, `llama.cpp`, `anthropic`
+- Enabled providers: `lieselotte`, `hermine`, `anthropic`
 - Plugin: `opencode-claude-auth@latest`; `share: disabled`
 - Read permission: `.env` and `.env.*` denied; `.env.example` / `.env.default` allowed
 - MCP servers: `atlassian` (remote OAuth at `https://mcp.atlassian.com/v1/mcp`) and `playwright` (local via `npx @playwright/mcp@latest`)
@@ -115,7 +118,7 @@ tooling/
 - `server.sh`: router mode (default, `presets/models.ini`) or single model; serves OpenAI-compatible API at `LLAMA_HOST:LLAMA_PORT` (default `127.0.0.1:8081`).
 - Config in `config.env` (gitignored; copy from `config.env.example`).
 - Models are **never** committed: `.gitignore` excludes `llama.cpp/{vendor,cache}/`, `config.env`, `presets/models.ini`, and `**/*.gguf`.
-- OpenCode: on native Linux set the `llama.cpp` provider `baseURL` to `http://127.0.0.1:8081/v1` (the `172.30.48.1` value is a WSL→Windows-host gateway).
+- OpenCode: the local `lieselotte` provider `baseURL` is `http://127.0.0.1:8081/v1`; the remote `hermine` provider points at `http://hermine:8081/v1`.
 - Skill `.claude/skills/llama-preset/` (`scripts/recommend.sh`): generates/updates a `presets/models.ini` `[section]` tuned to the detected hardware (GPU/VRAM via `llama-server --list-devices`, autosizing via `llama-fit-params`, iGPU deprioritized); resolves the HuggingFace model card from `models.list` (`--hf-url`) and folds in vendor best practices via `--extra KEY=VALUE` — hardware-owned keys (`device`, `n-gpu-layers`, `n-cpu-moe`, `ctx-size`, `flash-attn`, `cache-type-k/v`, `jinja`) are never overridden.
 
 ## Conventions
