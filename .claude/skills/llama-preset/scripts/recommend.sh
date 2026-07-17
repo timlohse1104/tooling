@@ -382,6 +382,7 @@ shopt -u nocasematch
 # (newest-feature gate: only use it if the installed llama-server supports it).
 # --------------------------------------------------------------------------- #
 SPEC_TYPE=""; SPEC_DRAFT=""; SPEC_SRC=""
+DRAFT_OVERHEAD_MIB=0
 if [[ "$IS_OCR" == 0 && "$AGENTIC" == 1 ]]; then
     if ! supports_flag "spec-type"; then
         note "installed llama-server ($SERVER_VERSION) does not support --spec-type; skipping MTP speculative decoding (upgrade llama.cpp to unlock it)"
@@ -393,6 +394,16 @@ if [[ "$IS_OCR" == 0 && "$AGENTIC" == 1 ]]; then
         if [[ -n "$DRAFTER" ]]; then
             SPEC_TYPE="draft-mtp"; SPEC_DRAFT="$DRAFTER"
             SPEC_SRC="sibling drafter found next to the model: $(basename "$DRAFTER")"
+            # A separate MTP drafter file adds real VRAM cost on top of the target
+            # model that llama-fit-params cannot estimate for us: it has no
+            # standalone --model-draft support, and MTP heads can't even be
+            # loaded alone (they require the target's own context: "Gemma4Assistant
+            # requires ctx_other to be set"). Use the drafter file's own size in
+            # MiB as an honest proxy for its weight footprint (it has no separate
+            # KV-cache of its own — it shares the target's context) and add it to
+            # every fit budget check below so we don't silently under-count VRAM.
+            DRAFTER_BYTES="$(stat -c '%s' "$DRAFTER" 2>/dev/null || echo 0)"
+            DRAFT_OVERHEAD_MIB=$(( DRAFTER_BYTES / 1024 / 1024 ))
         fi
     fi
 fi
@@ -455,73 +466,177 @@ DEV_TOTAL=0
 [[ -n "$DEVICE" ]] && DEV_TOTAL="$(device_total_mib "$DEVICE")"
 
 # --------------------------------------------------------------------------- #
-# run llama-fit-params to autosize (best-effort; output format may vary by build)
+# hardware fit: probe llama-fit-params for the REAL per-device memory need
+# (model weights, KV-cache/context, compute buffer) at the agentic KV-cache
+# types decided above, and derive n-gpu-layers / n-cpu-moe / ctx-size that
+# ACTUALLY fit — instead of a blind file-size heuristic.
+#
+# Two things learned the hard way from the installed build and worth stating
+# explicitly: (1) llama-fit-params does NOT accept --jinja (server-only flag;
+# passing it aborts before printing anything); (2) its own "--fit on" does not
+# reliably shrink ctx-size to make things fit for every architecture — it can
+# report a memory breakdown that overflows the device without adjusting
+# anything. So this script owns the actual fit-to-VRAM decision, using
+# --fit-print's real per-device MiB breakdown as ground truth, verified by
+# re-probing after every candidate change (never a single blind guess).
 # --------------------------------------------------------------------------- #
 FIT_LOG=""
-FIT_NGL=""        # parsed n_gpu_layers
-FIT_NCMOE=""      # parsed n_cpu_moe
-FIT_CTX=""        # parsed ctx
-N_LAYER=""
+N_LAYER=""          # total offloadable layers, from "offloaded X/Y layers to GPU"
 N_CTX_TRAIN=""
 N_EXPERT=""
 
-run_fit() {
-    [[ -n "$FIT_BIN" ]] || { note "llama-fit-params not present; using heuristic only."; return; }
-    local -a args=(-m "$MODEL_PATH" --fit on --fit-print on --fit-ctx 4096 -c "${FORCE_CTX:-0}" --jinja)
+# One-off model metadata probe (~0.3-0.5s): n_ctx_train / total layer count /
+# MoE expert count aren't in the plain --fit-print table, only in -v output.
+probe_model_meta() {
+    [[ -n "$FIT_BIN" ]] || return 0
+    local -a args=(-m "$MODEL_PATH" --fit on -v)
     [[ -n "$DEVICE" ]] && args+=(--device "$DEVICE")
-    [[ -n "$DEVICE" ]] && args+=(--fit-target "$MARGIN_MIB")
-    note "Running: llama-fit-params ${args[*]}"
-    local tmo=""; command -v timeout >/dev/null 2>&1 && tmo="timeout 300"
-    FIT_LOG="$($tmo "$FIT_BIN" "${args[@]}" 2>&1 || true)"
-
-    # model metadata (printed at load by the common loader)
-    N_LAYER="$(sed -n 's/.*n_layer[^0-9]*\([0-9]\+\).*/\1/p'      <<< "$FIT_LOG" | head -n1)"
-    N_CTX_TRAIN="$(sed -n 's/.*n_ctx_train[^0-9]*\([0-9]\+\).*/\1/p' <<< "$FIT_LOG" | head -n1)"
-    N_EXPERT="$(sed -n 's/.*n_expert[^0-9]*\([0-9]\+\).*/\1/p'    <<< "$FIT_LOG" | head -n1)"
-    [[ -n "$N_EXPERT" && "$N_EXPERT" -gt 1 ]] && IS_MOE=1
-
-    # fitted recommendation (tolerant: accept several spellings)
-    FIT_NGL="$(sed -n 's/.*\(n_gpu_layers\|gpu_layers\|n-gpu-layers\)[^0-9]*\([0-9]\+\).*/\2/p' <<< "$FIT_LOG" | tail -n1)"
-    FIT_NCMOE="$(sed -n 's/.*\(n_cpu_moe\|n-cpu-moe\|cpu_moe\)[^0-9]*\([0-9]\+\).*/\2/p'        <<< "$FIT_LOG" | tail -n1)"
-    FIT_CTX="$(sed -n 's/.*\(n_ctx\|ctx_size\|ctx-size\)[^0-9]*\([0-9]\+\).*/\2/p'              <<< "$FIT_LOG" | tail -n1)"
+    local tmo=""; command -v timeout >/dev/null 2>&1 && tmo="timeout 60"
+    local log; log="$($tmo "$FIT_BIN" "${args[@]}" 2>&1 || true)"
+    FIT_LOG="$log"
+    N_CTX_TRAIN="$(sed -n 's/.*n_ctx_train[^0-9]*\([0-9]\+\).*/\1/p' <<< "$log" | head -n1)"
+    N_LAYER="$(sed -n 's/.*offloaded [0-9]\+\/\([0-9]\+\) layers to GPU.*/\1/p' <<< "$log" | head -n1)"
+    N_EXPERT="$(sed -n 's/.*n_expert[^0-9=]*=\{0,1\} *\([0-9]\+\).*/\1/p' <<< "$log" | head -n1)"
+    if [[ -n "$N_EXPERT" && "$N_EXPERT" -gt 1 ]]; then IS_MOE=1; fi
+    return 0
 }
-run_fit
 
-# --------------------------------------------------------------------------- #
-# decide the final values (fit result wins; heuristic/default otherwise)
-# --------------------------------------------------------------------------- #
+# probe_fit CTX NCMOE -> sets P_MODEL/P_CTX/P_COMPUTE (target $DEVICE, MiB) and
+# P_HOST_MODEL (Host, MiB) for that ctx-size / n-cpu-moe combination.
+probe_fit() {
+    local ctx="$1" ncmoe="$2"
+    P_MODEL=""; P_CTX=""; P_COMPUTE=""; P_HOST_MODEL=""
+    [[ -n "$FIT_BIN" && -n "$DEVICE" ]] || return 0
+    local -a args=(-m "$MODEL_PATH" --fit on --fit-print on --fit-ctx 4096
+                   --device "$DEVICE" --fit-target "$MARGIN_MIB"
+                   -ctk "$CACHE_K" -ctv "$CACHE_V")
+    [[ "$ctx" -gt 0 ]] && args+=(-c "$ctx")
+    [[ -n "$ncmoe" && "$ncmoe" -gt 0 ]] && args+=(-ncmoe "$ncmoe")
+    local tmo=""; command -v timeout >/dev/null 2>&1 && tmo="timeout 60"
+    local out; out="$($tmo "$FIT_BIN" "${args[@]}" 2>&1 || true)"
+    FIT_LOG="$out"
+    P_MODEL="$(awk -v d="$DEVICE" '$1==d{print $2}' <<< "$out")"
+    P_CTX="$(awk -v d="$DEVICE" '$1==d{print $3}' <<< "$out")"
+    P_COMPUTE="$(awk -v d="$DEVICE" '$1==d{print $4}' <<< "$out")"
+    P_HOST_MODEL="$(awk '$1=="Host"{print $2}' <<< "$out")"
+    return 0
+}
+
+# true (exit 0) iff model+ctx+compute (+ any MTP drafter overhead) MiB fits
+# within DEV_TOTAL - MARGIN_MIB
+fits() {
+    [[ -n "$1" && -n "$2" && -n "$3" ]] || return 1
+    (( $1 + $2 + $3 + DRAFT_OVERHEAD_MIB <= DEV_TOTAL - MARGIN_MIB ))
+}
+
+DRAFT_NOTE=""
+[[ "$DRAFT_OVERHEAD_MIB" -gt 0 ]] && DRAFT_NOTE=" + ~${DRAFT_OVERHEAD_MIB}MiB MTP drafter"
+
 NGL_VAL=""; NGL_SRC=""
 NCMOE_VAL=""; NCMOE_SRC=""
 CTX_VAL=""; CTX_SRC=""
 
-# n-gpu-layers
-if [[ -n "$FIT_NGL" ]]; then
-    NGL_VAL="$FIT_NGL"; NGL_SRC="llama-fit-params"
-elif [[ -z "$DEVICE" ]]; then
+if [[ -z "$DEVICE" ]]; then
     NGL_VAL=0; NGL_SRC="heuristic: no GPU -> CPU only"
-elif [[ "$DEV_TOTAL" -gt 0 && $(( MODEL_MIB + MARGIN_MIB + 2048 )) -le "$DEV_TOTAL" ]]; then
-    NGL_VAL=999; NGL_SRC="heuristic: model (${MODEL_MIB}MiB) fits in ${DEV_TOTAL}MiB VRAM"
-else
-    NGL_VAL=999; NGL_SRC="heuristic: too big to fully verify — start at 999 and lower if OOM"
-fi
-
-# n-cpu-moe (only meaningful for MoE that does not fully fit)
-if [[ "$IS_MOE" == 1 ]]; then
-    if [[ -n "$FIT_NCMOE" ]]; then
-        NCMOE_VAL="$FIT_NCMOE"; NCMOE_SRC="llama-fit-params"
-    elif [[ "$DEV_TOTAL" -gt 0 && $(( MODEL_MIB + MARGIN_MIB + 2048 )) -gt "$DEV_TOTAL" && -n "$N_LAYER" ]]; then
-        # rough: offload enough expert layers that the dense remainder fits
-        NCMOE_VAL="$N_LAYER"; NCMOE_SRC="heuristic: MoE exceeds VRAM — keep all expert layers on CPU; lower to push more onto GPU"
+    CTX_VAL="${FORCE_CTX:-32768}"
+    CTX_SRC="default 32768"; [[ -n "$FORCE_CTX" ]] && CTX_SRC="forced via --ctx"
+elif [[ -z "$FIT_BIN" ]]; then
+    note "llama-fit-params not present; using file-size heuristic only."
+    if [[ "$DEV_TOTAL" -gt 0 && $(( MODEL_MIB + MARGIN_MIB + 2048 )) -le "$DEV_TOTAL" ]]; then
+        NGL_VAL=999; NGL_SRC="heuristic: model (${MODEL_MIB}MiB) fits in ${DEV_TOTAL}MiB VRAM"
+    else
+        NGL_VAL=999; NGL_SRC="heuristic: too big to fully verify — start at 999 and lower if OOM"
     fi
-fi
-
-# ctx-size
-if   [[ -n "$FORCE_CTX" ]]; then CTX_VAL="$FORCE_CTX"; CTX_SRC="forced via --ctx"
-elif [[ -n "$FIT_CTX" ]];   then CTX_VAL="$FIT_CTX";   CTX_SRC="llama-fit-params"
+    CTX_VAL="${FORCE_CTX:-32768}"
+    CTX_SRC="default 32768"; [[ -n "$FORCE_CTX" ]] && CTX_SRC="forced via --ctx"
 else
-    CTX_VAL=32768; CTX_SRC="default 32768"
-    if [[ -n "$N_CTX_TRAIN" && "$N_CTX_TRAIN" -gt 0 && "$N_CTX_TRAIN" -lt "$CTX_VAL" ]]; then
-        CTX_VAL="$N_CTX_TRAIN"; CTX_SRC="capped at n_ctx_train=$N_CTX_TRAIN"
+    probe_model_meta
+    CTX_IS_FORCED=0; [[ -n "$FORCE_CTX" ]] && CTX_IS_FORCED=1
+    TARGET_CTX="${FORCE_CTX:-${N_CTX_TRAIN:-32768}}"
+    if [[ "$CTX_IS_FORCED" == 0 && -n "$N_CTX_TRAIN" && "$N_CTX_TRAIN" -gt 0 && "$TARGET_CTX" -gt "$N_CTX_TRAIN" ]]; then
+        TARGET_CTX="$N_CTX_TRAIN"
+    fi
+
+    probe_fit "$TARGET_CTX" 0
+    FOUND_NCMOE=""; SHRINK_NEEDED=0
+    if fits "$P_MODEL" "$P_CTX" "$P_COMPUTE"; then
+        NGL_VAL=999
+        NGL_SRC="llama-fit-params: fits fully (needs ~$(( P_MODEL + P_CTX + P_COMPUTE + DRAFT_OVERHEAD_MIB ))MiB${DRAFT_NOTE} of $(( DEV_TOTAL - MARGIN_MIB ))MiB budget on $DEVICE at ctx=$TARGET_CTX)"
+        CTX_VAL="$TARGET_CTX"
+        CTX_SRC="llama-fit-params (native n_ctx_train, verified it fits)"
+        [[ "$CTX_IS_FORCED" == 1 ]] && CTX_SRC="forced via --ctx, verified it fits"
+    elif [[ "$IS_MOE" == 1 && -n "$N_LAYER" ]]; then
+        # binary search the smallest n-cpu-moe (of N_LAYER total layers) that
+        # makes ctx=TARGET_CTX fit, by re-probing at each candidate.
+        bs_lo=1; bs_hi="$N_LAYER"
+        while [[ "$bs_lo" -le "$bs_hi" ]]; do
+            bs_mid=$(( (bs_lo + bs_hi) / 2 ))
+            probe_fit "$TARGET_CTX" "$bs_mid"
+            if fits "$P_MODEL" "$P_CTX" "$P_COMPUTE"; then
+                FOUND_NCMOE="$bs_mid"; bs_hi=$(( bs_mid - 1 ))
+            else
+                bs_lo=$(( bs_mid + 1 ))
+            fi
+        done
+        if [[ -n "$FOUND_NCMOE" ]]; then
+            probe_fit "$TARGET_CTX" "$FOUND_NCMOE"
+            NGL_VAL=999
+            NGL_SRC="llama-fit-params: full ctx doesn't fit with all experts on GPU — n-cpu-moe=$FOUND_NCMOE found by binary search (needs ~$(( P_MODEL + P_CTX + P_COMPUTE + DRAFT_OVERHEAD_MIB ))MiB${DRAFT_NOTE} of $(( DEV_TOTAL - MARGIN_MIB ))MiB)"
+            NCMOE_VAL="$FOUND_NCMOE"
+            NCMOE_SRC="llama-fit-params: minimal value (of $N_LAYER layers) that fits at ctx=$TARGET_CTX"
+            CTX_VAL="$TARGET_CTX"
+            CTX_SRC="llama-fit-params (native n_ctx_train, fits once n-cpu-moe=$FOUND_NCMOE)"
+            [[ "$CTX_IS_FORCED" == 1 ]] && CTX_SRC="forced via --ctx, fits once n-cpu-moe=$FOUND_NCMOE"
+        else
+            probe_fit "$TARGET_CTX" "$N_LAYER"
+            note "even n-cpu-moe=$N_LAYER (all MoE experts on CPU) doesn't fit ctx=$TARGET_CTX — ${CTX_IS_FORCED:+ctx was forced, not shrinking further}${CTX_IS_FORCED:-shrinking ctx-size too}"
+            NCMOE_VAL="$N_LAYER"
+            NCMOE_SRC="llama-fit-params: all expert layers pushed to CPU, still tight at ctx=$TARGET_CTX"
+            SHRINK_NEEDED=1
+        fi
+    else
+        SHRINK_NEEDED=1
+    fi
+
+    if [[ "$SHRINK_NEEDED" == 1 && "$CTX_IS_FORCED" == 1 ]]; then
+        # user explicitly forced --ctx: don't override it, just warn honestly
+        NGL_VAL=999
+        NGL_SRC="WARNING: forced ctx=$TARGET_CTX does not fit (${P_MODEL:-?}+${P_CTX:-?}+${P_COMPUTE:-?}MiB${DRAFT_NOTE} vs $(( DEV_TOTAL - MARGIN_MIB ))MiB budget) — lower --ctx, raise --margin's counterpart, or use a smaller quant"
+        CTX_VAL="$TARGET_CTX"
+        CTX_SRC="forced via --ctx — does NOT fit as probed, verify by loading"
+    elif [[ "$SHRINK_NEEDED" == 1 ]]; then
+        # not forced: shrink ctx-size proportionally (KV MiB scales ~linearly
+        # with ctx for a fixed quant, minus any MTP drafter overhead), then
+        # verify with real probes — retrying with a further 10% cut (bounded)
+        # if the linear estimate slightly overshoots due to rounding/compute-
+        # buffer variance, instead of reporting a single unverified guess.
+        BUDGET=$(( DEV_TOTAL - MARGIN_MIB - P_MODEL - P_COMPUTE - DRAFT_OVERHEAD_MIB ))
+        if [[ "$BUDGET" -gt 0 && -n "$P_CTX" && "$P_CTX" -gt 0 ]]; then
+            NEW_CTX=$(awk -v b="$BUDGET" -v c="$P_CTX" -v t="$TARGET_CTX" 'BEGIN{n=int(b/(c/t)/4096)*4096; if(n<4096)n=4096; print n}')
+        else
+            NEW_CTX=4096
+        fi
+        SHRINK_TRY=0
+        while true; do
+            probe_fit "$NEW_CTX" "${NCMOE_VAL:-0}"
+            if fits "$P_MODEL" "$P_CTX" "$P_COMPUTE"; then
+                NGL_VAL=999
+                NGL_SRC="llama-fit-params: native ctx=$TARGET_CTX doesn't fit — ctx-size reduced and re-verified"
+                CTX_VAL="$NEW_CTX"
+                CTX_SRC="llama-fit-params: largest ctx that fits${NCMOE_VAL:+ with n-cpu-moe=$NCMOE_VAL}${DRAFT_NOTE} (native n_ctx_train=$TARGET_CTX doesn't fit)"
+                break
+            fi
+            SHRINK_TRY=$(( SHRINK_TRY + 1 ))
+            if [[ "$NEW_CTX" -le 4096 || "$SHRINK_TRY" -ge 4 ]]; then
+                NGL_VAL=999
+                NGL_SRC="WARNING: does not fit even at ctx=$NEW_CTX (${P_MODEL:-?}+${P_CTX:-?}+${P_COMPUTE:-?}MiB${DRAFT_NOTE} vs $(( DEV_TOTAL - MARGIN_MIB ))MiB) — lower n-gpu-layers or use a smaller quant"
+                CTX_VAL="$NEW_CTX"
+                CTX_SRC="llama-fit-params: smallest attempted ctx, still tight — verify by loading"
+                break
+            fi
+            NEW_CTX=$(( (NEW_CTX * 90 / 100 / 4096) * 4096 ))
+            [[ "$NEW_CTX" -lt 4096 ]] && NEW_CTX=4096
+        done
     fi
 fi
 
@@ -645,6 +760,7 @@ print_optimization_diff() {
     fi
     if [[ -n "$SPEC_TYPE" ]]; then
         printf 'speculative: spec-type=%s (%s)\n' "$SPEC_TYPE" "$SPEC_SRC"
+        [[ "$DRAFT_OVERHEAD_MIB" -gt 0 ]] && printf 'drafter VRAM: ~%sMiB (file size; llama-fit-params cannot estimate a separate MTP drafter, folded into the fit budget above)\n' "$DRAFT_OVERHEAD_MIB"
     else
         printf 'speculative: none (no embedded/sibling MTP drafter found)\n'
     fi
@@ -661,9 +777,10 @@ print_optimization_diff() {
         printf '  (no models.list entry matched "%s"; search HuggingFace manually)\n' "$SECTION"
     fi
     if [[ -n "$FIT_LOG" ]]; then
-        printf '\n----- llama-fit-params (parsed: ngl=%s ncmoe=%s ctx=%s) -----\n' \
-            "${FIT_NGL:-?}" "${FIT_NCMOE:-?}" "${FIT_CTX:-?}"
-        grep -iE 'fit|gpu_layers|cpu_moe|n_ctx|MiB|offload|memory' <<< "$FIT_LOG" | tail -n 25 || true
+        printf '\n----- llama-fit-params (final decision: ngl=%s ncmoe=%s ctx=%s) -----\n' \
+            "${NGL_VAL:-?}" "${NCMOE_VAL:-?}" "${CTX_VAL:-?}"
+        printf '(last probe run; see the # source comments below for how ngl/ncmoe/ctx were actually derived)\n'
+        grep -iE 'fit|gpu_layers|cpu_moe|n_ctx|MiB|offload|memory' <<< "$FIT_LOG" | tail -n 10 || true
     fi
     print_optimization_diff
 } >&2
