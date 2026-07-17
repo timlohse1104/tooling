@@ -40,11 +40,41 @@ if (-not $LLAMA_MODELS_MAX) { $LLAMA_MODELS_MAX = '1' }
 if (-not $LLAMA_NGL)        { $LLAMA_NGL = '999' }
 if (-not $LLAMA_CTX)        { $LLAMA_CTX = '0' }
 if (-not $LLAMA_KV)         { $LLAMA_KV = 'f16' }
+if (-not $LLAMA_AUTO_UPDATE)          { $LLAMA_AUTO_UPDATE = '1' }
+if (-not $LLAMA_UPDATE_CHECK_INTERVAL) { $LLAMA_UPDATE_CHECK_INTERVAL = '3600' }   # seconds; 0 = always check
 
 # Allow per-run env overrides (mirrors "LLAMA_CTX=8192 ./server.sh ...").
 if ($env:LLAMA_NGL) { $LLAMA_NGL = $env:LLAMA_NGL }
 if ($env:LLAMA_CTX) { $LLAMA_CTX = $env:LLAMA_CTX }
 if ($env:LLAMA_KV)  { $LLAMA_KV  = $env:LLAMA_KV }
+if ($env:LLAMA_AUTO_UPDATE)           { $LLAMA_AUTO_UPDATE = $env:LLAMA_AUTO_UPDATE }
+if ($env:LLAMA_UPDATE_CHECK_INTERVAL) { $LLAMA_UPDATE_CHECK_INTERVAL = $env:LLAMA_UPDATE_CHECK_INTERVAL }
+
+# --- auto-update (throttled) ------------------------------------------------
+# Runs bootstrap.ps1 before serving so LLAMA_VERSION=latest actually stays
+# current. bootstrap.ps1 itself is idempotent (skips the download if the
+# resolved tag/CUDA combo is already installed), so this is cheap once up to
+# date. Throttled by a local marker so restarts within
+# LLAMA_UPDATE_CHECK_INTERVAL don't re-hit the GitHub API or need network.
+function Invoke-MaybeAutoUpdate {
+    if ($LLAMA_AUTO_UPDATE -eq '0') { return }
+    $marker = Join-Path $ScriptDir 'vendor\.last-auto-check'
+    $now = [DateTimeOffset]::UtcNow.ToUnixTimeSeconds()
+    $interval = [int]$LLAMA_UPDATE_CHECK_INTERVAL
+    if ($interval -ne 0 -and (Test-Path $marker)) {
+        $last = 0L
+        [void][int64]::TryParse((Get-Content -Raw -LiteralPath $marker -ErrorAction SilentlyContinue), [ref]$last)
+        if ($last -gt 0 -and ($now - $last) -lt $interval) { return }
+    }
+    Write-Host "Checking for llama.cpp updates (LLAMA_VERSION=$LLAMA_VERSION, recheck every ${interval}s)..."
+    New-Item -ItemType Directory -Force -Path (Join-Path $ScriptDir 'vendor') | Out-Null
+    Set-Content -Path $marker -Value $now -NoNewline
+    try {
+        & (Join-Path $ScriptDir 'bootstrap.ps1')
+    } catch {
+        Write-Warning 'Update check failed (offline / rate-limited?) — continuing with the installed build if present.'
+    }
+}
 
 function Resolve-Bin {
     $item = Get-ChildItem -Path (Join-Path $ScriptDir 'vendor') -Recurse -Filter 'llama-server.exe' -ErrorAction SilentlyContinue | Select-Object -First 1
@@ -80,6 +110,7 @@ Copy presets\models.example.ini to $LLAMA_PRESET and edit the paths.
 "@
         exit 1
     }
+    Invoke-MaybeAutoUpdate
     $bin = Resolve-Bin
     Write-Host "Router mode @ http://${LLAMA_HOST}:${LLAMA_PORT}  (preset: $LLAMA_PRESET, max: $LLAMA_MODELS_MAX)"
     & $bin `
@@ -94,6 +125,7 @@ function Start-Single {
     param([string]$ModelPath, [string[]]$Passthrough)
 
     if (-not (Test-Path $ModelPath)) { throw "Model not found: $ModelPath" }
+    Invoke-MaybeAutoUpdate
     $bin = Resolve-Bin
     $threads = Get-PhysicalCores
     $modelName = Split-Path $ModelPath -Leaf
@@ -127,6 +159,10 @@ Usage:
   .\server.ps1                       Router mode (multi-model) via `$LLAMA_PRESET
   .\server.ps1 <model.gguf> [args]   Single model; extra args pass through to llama-server
   .\server.ps1 -List                 List GGUF files under `$LLAMA_MODELS_DIR
+
+Auto-update (config.ps1): `$LLAMA_AUTO_UPDATE = "0" disables the update check;
+`$LLAMA_UPDATE_CHECK_INTERVAL (seconds, default 3600) throttles how often
+serving re-checks GitHub for a newer LLAMA_VERSION build.
 "@ | Write-Host
     }
     'List' { Show-Models }

@@ -138,7 +138,10 @@ set the `llama.cpp` provider `baseURL` to `http://127.0.0.1:8081/v1`.
 nohup bash server.sh > ~/llama-server.log 2>&1 &   # detach; stop with: pkill -f llama-server
 ```
 
-> Updating later: bump `LLAMA_VERSION` in `config.env`, then
+> Updating later: with the default `LLAMA_VERSION="latest"`, `server.sh` checks
+> for a newer release on every start (throttled, see "Auto-update on server
+> start" below) — no manual step needed. To force an immediate update outside
+> that throttle window, or if you're pinned to a specific tag, run
 > `bash bootstrap.sh --force`.
 
 ## Scripts
@@ -237,7 +240,7 @@ Notes:
 
 | Variable | Meaning |
 |----------|---------|
-| `LLAMA_VERSION` | release tag (e.g. `b9827`) or `latest` |
+| `LLAMA_VERSION` | `latest` (default, recommended) or a pinned release tag (e.g. `b9827`) |
 | `LLAMA_BACKEND` | `vulkan` (bash/Linux) or `cuda` (PowerShell/Windows) |
 | `LLAMA_CUDA` | Windows only: CUDA build to fetch (`12.4` or `13.3`) |
 | `LLAMA_MODELS_DIR` | model storage **outside** the repo |
@@ -245,7 +248,24 @@ Notes:
 | `LLAMA_PRESET` | router preset path, relative to `llama.cpp/` |
 | `LLAMA_MODELS_MAX` | max simultaneously loaded models in router mode |
 | `LLAMA_NGL` / `LLAMA_CTX` / `LLAMA_KV` | single-model defaults |
+| `LLAMA_AUTO_UPDATE` | `1` (default) auto-runs bootstrap before serving; `0` disables (offline use) |
+| `LLAMA_UPDATE_CHECK_INTERVAL` | seconds between auto-update checks (default `3600`); `0` = check on every start |
 | `HF_TOKEN` | optional, for gated/private HuggingFace downloads |
+
+## Auto-update on server start
+
+With the default `LLAMA_VERSION="latest"`, `server.sh` / `server.ps1` run
+`bootstrap.sh` / `bootstrap.ps1` before serving to pick up newer releases
+automatically. `bootstrap.*` is idempotent (skips the download if the
+resolved tag is already installed), so this is cheap once up to date. A local
+marker (`vendor/.last-auto-check`) throttles the check to once per
+`LLAMA_UPDATE_CHECK_INTERVAL` seconds, so restarting the server repeatedly
+doesn't hammer GitHub's API (rate limits) or require network on every start.
+If the check fails (offline, rate-limited), serving continues with whatever
+build is already installed — it only hard-fails if no build is installed at
+all. Set `LLAMA_AUTO_UPDATE=0` to disable entirely, or keep a pinned
+`LLAMA_VERSION` tag instead of `latest` if you want fully manual updates
+(`bash bootstrap.sh --force`).
 
 ## Model preset (`presets/*.ini`)
 

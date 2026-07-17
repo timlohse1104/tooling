@@ -9,11 +9,20 @@
 # the *.sh scripts target Vulkan (the Linux box has an AMD RX 7900 XTX).
 # ============================================================================
 
-# llama.cpp release to install: a tag like "b9859", or "latest".
-$LLAMA_VERSION = "b9859"
+# llama.cpp release to install: "latest" (recommended) or a pinned tag like "b9859".
+$LLAMA_VERSION = "latest"
 
 # Compute backend of the prebuilt binary (this setup targets CUDA on Windows).
 $LLAMA_BACKEND = "cuda"
+
+# server.ps1 checks for updates on every start (via bootstrap.ps1) and installs
+# a newer LLAMA_VERSION automatically if one is available. Set to "0" to
+# disable entirely (fully offline / air-gapped use).
+$LLAMA_AUTO_UPDATE = "1"
+
+# Minimum seconds between auto-update checks (avoids hitting GitHub's API rate
+# limit on frequent restarts). 0 = check on every server start.
+$LLAMA_UPDATE_CHECK_INTERVAL = "3600"
 
 # CUDA toolkit version of the prebuilt to fetch. llama.cpp publishes Windows
 # builds for "12.4" and "13.3". 12.4 has the broadest driver compatibility;

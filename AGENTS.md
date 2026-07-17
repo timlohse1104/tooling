@@ -116,6 +116,7 @@ tooling/
 - `bootstrap.sh` downloads `llama-<tag>-bin-ubuntu-vulkan-<arch>.tar.gz` into `vendor/` (idempotent, `--force` to reinstall).
 - `download-model.sh` pulls GGUFs to `$LLAMA_MODELS_DIR` (default `~/.local/share/llama.cpp/models`, outside the repo); prefers `hf`/`huggingface-cli`, falls back to `curl`; manifest `models.list`.
 - `server.sh`: router mode (default, `presets/models.ini`) or single model; serves OpenAI-compatible API at `LLAMA_HOST:LLAMA_PORT` (default `127.0.0.1:8081`).
+- `LLAMA_VERSION` defaults to `latest`. `server.sh`/`server.ps1` auto-run `bootstrap.*` before serving to pick up new releases, throttled by a `vendor/.last-auto-check` marker (`LLAMA_UPDATE_CHECK_INTERVAL`, default 3600s) so repeated restarts don't hit GitHub's API. `LLAMA_AUTO_UPDATE=0` disables it (offline use); a failed check falls back to the already-installed build instead of hard-failing.
 - Config in `config.env` (gitignored; copy from `config.env.example`).
 - Models are **never** committed: `.gitignore` excludes `llama.cpp/{vendor,cache}/`, `config.env`, `presets/models.ini`, and `**/*.gguf`.
 - OpenCode: the local `lieselotte` provider `baseURL` is `http://127.0.0.1:8081/v1`; the remote `hermine` provider points at `http://hermine:8081/v1`.
