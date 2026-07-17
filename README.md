@@ -138,6 +138,7 @@ Collection of all useful tooling i found throughout the time of developing softw
 
 - [Postman](https://www.postman.com/) - Postman makes API development easy. Our platform offers the tools to simplify each step of the API building process and streamlines collaboration so you can create better APIs faster.
 - [Insomnia](https://insomnia.rest/) - Insomnia is a cross-platform GraphQL and REST client, available for Mac, Windows, and Linux.
+- [Bruno](https://www.usebruno.com/) - Bruno is an open-source, desktop-based API client that stores API collections in your file system, version control friendly.
 
 ## 🧑‍🤝‍🧑[Collaboration](#collaboration)
 
