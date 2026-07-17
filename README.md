@@ -7,6 +7,7 @@ Collection of all useful tooling i found throughout the time of developing softw
 - [🛠️ Tooling](#️-tooling)
 - [📜Table of Contents](#table-of-contents)
   - [🔥Spotlight](#spotlight)
+  - [⭐Current Favorites](#current-favorites)
   - [🔗APIs](#apis)
   - [📂Version Control](#version-control)
   - [✒️Editors](#️editors)
@@ -34,6 +35,24 @@ Collection of all useful tooling i found throughout the time of developing softw
 ## 🔥[Spotlight](#spotlight)
 
 - [tilloh.dev](https://tilloh.dev) - My personal website contains a range of tools. Memorandum is great for organizing links in folders and for keeping them across different devices. It also provides daily jokes.
+
+## ⭐[Current Favorites](#current-favorites)
+
+Software I use daily, jump to its full entry below via the linked section:
+
+- [GitHub](#version-control)
+- [Visual Studio Code](#editors)
+- [Docker](#deployment-tools)
+- [Svelte](#programming-languages)
+- [Affine](#notes)
+- [Bruno](#http-clients)
+- [Bitwarden](#secret-management)
+- [Authy](#2fa-authenticators)
+- [Plex](#home-network)
+- [Cloudflare](#home-network)
+- [OpenCode](#ai-tools)
+- [Steam](#gaming)
+- [Vivaldi](#other)
 
 ## 🔗[APIs](#apis)
 
@@ -202,6 +221,7 @@ Collection of all useful tooling i found throughout the time of developing softw
 ## 🤖[AI Tools](#ai-tools)
 
 - [Claude Code](https://claude.ai/code) - Anthropic's official CLI for Claude, an AI coding assistant that helps with software development tasks directly from the terminal.
+- [OpenCode](https://opencode.ai/) - Open-source, terminal-native AI coding agent that connects to multiple LLM providers (Anthropic, local llama.cpp models, and more) for software development tasks.
 - [Le Chat](https://chat.mistral.ai/chat) - Mistral AI chat of european (french) conpany.
 - [Mistral Vibe Agentic Coder](https://vibe.mistral.ai/) - Mistral's agentic coding assistant that autonomously handles complex software development tasks.
 - [ChatQPT](https://chatqpt.com/) - ChatQPT is a free online chat room that allows you to meet with people from all over the world.
