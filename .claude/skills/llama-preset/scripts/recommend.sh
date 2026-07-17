@@ -11,11 +11,56 @@
 # It NEVER guesses values silently: every emitted key carries a trailing comment
 # stating its source (llama-fit-params | heuristic | default | model-card).
 #
+# In addition to raw hardware fit, the script applies AGENTIC tuning defaults —
+# settings that are not about "does it fit" but about best quality/speed for
+# agentic (tool-calling, multi-turn, long-context) usage:
+#   - cache-type-k = q8_0 (the FLOOR for K — attention keys are more sensitive
+#     to quantization loss, never go lower by default)
+#   - cache-type-v = q4_0 (the FLOOR for V — values tolerate more aggressive
+#     quantization, especially with flash-attn; frees the most KV memory)
+#   - parallel=1 (one conversation gets the full ctx-size and full throughput
+#     instead of splitting it across slots)
+#   - cache-reuse (fast prefix reuse for repeated system prompts / tool
+#     schemas across turns)
+#   - reasoning-format=auto, when the build supports it (guarantees proper
+#     reasoning_content/tool_call separation regardless of the build's own
+#     default)
+#   - auto-wired lossless MTP speculative decoding when the model has it
+#     (self-speculative HF "-MTP-" repos, or a sibling mtp-*.gguf drafter file)
+# Sampling temperature is vendor-owned (step 3), but prefer the LOWER end of
+# what the model card offers for agentic/tool-use (determinism over
+# creativity) — never all the way to temp=0 unless the model card explicitly
+# recommends greedy decoding; passing --extra temp=0 without confirming that
+# is refused unless --zero-temp-ok is also given (OCR models are exempt, see
+# below — deterministic extraction there isn't a creativity trade-off).
+# EXCEPTION: models detected as OCR/document-parsing (section name matches
+# "ocr") are left on the old conservative defaults (f16 KV, no parallel/
+# cache-reuse/speculative-decoding) since one-shot greedy grounding doesn't
+# benefit from them; force/undo detection with --ocr / --no-agentic.
+#
+# The script is idempotent both ways: re-running --write on a model that
+# already has a [section] in models.ini re-tunes it to the current hardware
+# AND the current agentic defaults (fixing drift, e.g. an old f16 KV-cache or
+# a missing parallel/cache-reuse/spec-type), and prints an OPTIMIZATION DIFF
+# against the previous section so you can see exactly what changed.
+#
+# ALWAYS USE THE NEWEST LLAMA.CPP FEATURES AVAILABLE: the script probes the
+# installed llama-server's --help/--version once (never hardcodes a flag set)
+# and only emits a feature-gated key (cache-reuse, reasoning-format, the exact
+# cache-type-k/v quant, spec-type) if the installed build actually supports
+# it, falling back gracefully with a note on older builds. Re-running
+# bootstrap.sh --force to update llama.cpp and then re-running this script is
+# how newly-available features get adopted.
+#
 # Vendor / model-card best practices (sampling, chat template, RoPE/YaRN, ...) are
 # NOT derivable from hardware. This script prints the HuggingFace model-card URL(s)
 # from models.list so the caller can read them, and accepts those settings back via
 # --extra KEY=VALUE. Hardware-owned keys always win: an --extra that collides with a
 # key this script already set for the detected hardware is refused (not overridden).
+#
+# The concrete hardware this repo targets (GPU model/VRAM, CPU, RAM) is documented
+# in llama.cpp/README.md (intro) and AGENTS.md, not hardcoded here — this script
+# always re-probes the actual machine via --list-devices/lscpu/free instead.
 #
 # Usage:
 #   recommend.sh <model>            [options]   # model = section name, filename, or path
@@ -26,6 +71,13 @@
 #   --device DEV     Force offload device(s), e.g. Vulkan0 (default: best discrete GPU)
 #   --ctx N          Force ctx-size (default: let fit choose, capped at n_ctx_train)
 #   --margin MiB     VRAM to leave free per device for compute buffers (default: 1024)
+#   --cache-k TYPE   Override cache-type-k (default: q8_0 floor, or f16 for OCR models)
+#   --cache-v TYPE   Override cache-type-v (default: q4_0 floor, or f16 for OCR models)
+#   --ocr            Force OCR/document-parsing mode (skip agentic extras)
+#   --no-agentic     Disable ALL agentic extras (parallel/cache-reuse/spec-decoding)
+#                    for a non-OCR model, e.g. when serving multiple parallel clients
+#   --zero-temp-ok   Confirm the model card explicitly recommends temp=0 (greedy);
+#                    required to pass --extra temp=0 on a non-OCR model
 #   --extra K=V      Add a vendor/model-card key (repeatable); skipped if hardware-owned
 #   --write          Merge the generated section into presets/models.ini (idempotent)
 #   --llama-dir DIR  Path to the repo's llama.cpp/ dir (default: auto-detected)
@@ -44,16 +96,26 @@ DO_WRITE=0
 LLAMA_DIR=""
 ONLY_DEVICES=0
 HF_ONLY=0
+FORCE_OCR=0
+AGENTIC=1
+FORCE_CACHE_K=""
+FORCE_CACHE_V=""
+ZERO_TEMP_OK=0
 declare -a EXTRA_KV=()
 
 while [[ $# -gt 0 ]]; do
     case "$1" in
-        -h|--help) sed -n '2,46p' "$0"; exit 0 ;;
+        -h|--help) sed -n '2,85p' "$0"; exit 0 ;;
         --list-devices) ONLY_DEVICES=1; shift ;;
         --hf-url)   HF_ONLY=1; shift ;;
         --device)   FORCE_DEVICE="${2:?--device needs a value}"; shift 2 ;;
         --ctx)      FORCE_CTX="${2:?--ctx needs a value}"; shift 2 ;;
         --margin)   MARGIN_MIB="${2:?--margin needs a value}"; shift 2 ;;
+        --cache-k)  FORCE_CACHE_K="${2:?--cache-k needs a value}"; shift 2 ;;
+        --cache-v)  FORCE_CACHE_V="${2:?--cache-v needs a value}"; shift 2 ;;
+        --ocr)      FORCE_OCR=1; shift ;;
+        --no-agentic) AGENTIC=0; shift ;;
+        --zero-temp-ok) ZERO_TEMP_OK=1; shift ;;
         --extra)    EXTRA_KV+=("${2:?--extra needs KEY=VALUE}"); shift 2 ;;
         --write)    DO_WRITE=1; shift ;;
         --llama-dir) LLAMA_DIR="${2:?--llama-dir needs a value}"; shift 2 ;;
@@ -66,9 +128,11 @@ err()  { printf 'ERROR: %s\n' "$*" >&2; exit 1; }
 note() { printf '%s\n' "$*" >&2; }
 trim() { local s="$1"; s="${s#"${s%%[![:space:]]*}"}"; s="${s%"${s##*[![:space:]]}"}"; printf '%s' "$s"; }
 
-# Keys this script owns for the detected hardware. --extra values matching any of
-# these are refused so vendor defaults can never override the hardware tuning.
-RESERVED_KEYS="alias model device ctx-size n-gpu-layers n-cpu-moe flash-attn cache-type-k cache-type-v jinja"
+# Keys this script owns for the detected hardware + agentic tuning. --extra
+# values matching any of these are refused so vendor defaults can never
+# override the hardware/agentic tuning (parallel/cache-reuse/spec-* are
+# auto-derived from this machine's actual files, not from vendor advice).
+RESERVED_KEYS="alias model device ctx-size n-gpu-layers n-cpu-moe flash-attn cache-type-k cache-type-v jinja parallel cache-reuse spec-type model-draft spec-draft-n-max reasoning-format"
 is_reserved() { [[ " $RESERVED_KEYS " == *" $1 "* ]]; }
 
 # --------------------------------------------------------------------------- #
@@ -140,6 +204,30 @@ SERVER_BIN="$(resolve_bin llama-server)"
 FIT_BIN="$(resolve_bin llama-fit-params)"
 [[ -n "$SERVER_BIN" ]] || err "llama-server not found under $LCPP/vendor. Run ./bootstrap.sh first."
 export LD_LIBRARY_PATH="$(dirname "$SERVER_BIN"):${LD_LIBRARY_PATH:-}"
+
+# --------------------------------------------------------------------------- #
+# feature detection: probe the INSTALLED llama-server's --help/--version so
+# every "newest feature" decision below is based on what this build actually
+# supports, not on what a past/other build supported. Never hardcode a flag
+# set — always re-probe, so upgrading llama.cpp (bootstrap.sh --force)
+# automatically unlocks better defaults next time this script runs.
+# --------------------------------------------------------------------------- #
+SERVER_VERSION="$("$SERVER_BIN" --version 2>&1 | head -n1 || true)"
+HELP_TEXT="$("$SERVER_BIN" --help 2>&1 || true)"
+
+# true if the installed build's --help mentions this long flag at all
+supports_flag() {
+    [[ -n "$1" ]] && grep -qF -- "$1" <<< "$HELP_TEXT"
+}
+
+# KV cache quant types this build actually accepts for -ctk/-ctv (parsed from
+# the "allowed values: ..." line right after --cache-type-k TYPE in --help).
+CACHE_TYPES_ALLOWED="$(awk '/--cache-type-k TYPE/{getline; print}' <<< "$HELP_TEXT" | sed -n 's/.*allowed values: *//p')"
+cache_type_supported() {
+    [[ -z "$CACHE_TYPES_ALLOWED" ]] && return 0   # unknown help format -> assume supported
+    local list=" ${CACHE_TYPES_ALLOWED//,/ } "
+    [[ "$list" == *" $1 "* ]]
+}
 
 # --------------------------------------------------------------------------- #
 # device discovery  (parses `llama-server --list-devices`)
@@ -228,9 +316,13 @@ SECTION="$(basename "$MODEL_PATH")"
 MODEL_BYTES="$(stat -c '%s' "$MODEL_PATH" 2>/dev/null || echo 0)"
 MODEL_MIB=$(( MODEL_BYTES / 1024 / 1024 ))
 
+# compute the HuggingFace model-card match once; reused by --hf-url, the final
+# report, and the embedded-MTP detection below.
+HC="$(hf_candidates)"
+HC_MATCH_REPO="$(awk -F'\t' '$1=="MATCH"{print $2; exit}' <<< "$HC")"
+
 # --hf-url shortcut: print the model-card URL(s) and exit (no fit/load needed)
 if [[ "$HF_ONLY" == 1 ]]; then
-    HC="$(hf_candidates)"
     if [[ -z "$HC" ]]; then
         note "No models.list entry matched '$SECTION'. Search HuggingFace for it manually."
         exit 0
@@ -242,11 +334,118 @@ if [[ "$HF_ONLY" == 1 ]]; then
     exit 0
 fi
 
+# --------------------------------------------------------------------------- #
+# read an existing [SECTION] from presets/models.ini (if any), so we can later
+# report an OPTIMIZATION DIFF instead of silently clobbering it.
+# --------------------------------------------------------------------------- #
+declare -A OLD_KV=()
+load_existing_section() {
+    [[ -f "$PRESET_FILE" ]] || return 0
+    local insec=0 line key val
+    while IFS= read -r line || [[ -n "$line" ]]; do
+        if [[ "$line" == "[$SECTION]" ]]; then insec=1; continue; fi
+        if [[ $insec == 1 && "$line" =~ ^\[ ]]; then break; fi
+        if [[ $insec == 1 && "$line" =~ ^([A-Za-z0-9_-]+)[[:space:]]*=[[:space:]]*(.*)$ ]]; then
+            key="${BASH_REMATCH[1]}"; val="$(trim "${BASH_REMATCH[2]%%#*}")"
+            OLD_KV["$key"]="$val"
+        fi
+    done < "$PRESET_FILE"
+}
+load_existing_section
+
 # MoE detection: filename hints (A3B/A4B/MoE/xNbE) — refined by fit log if available.
 IS_MOE=0
 shopt -s nocasematch
 [[ "$SECTION" =~ (a3b|a4b|a2b|moe|mixtral|-a[0-9]+b) ]] && IS_MOE=1
 shopt -u nocasematch
+
+# --------------------------------------------------------------------------- #
+# OCR/document-parsing exception: these models are excluded from agentic
+# quality/speed tuning (they want deterministic one-shot greedy grounding,
+# not multi-turn throughput). Detected from the section name; force with --ocr.
+# --------------------------------------------------------------------------- #
+IS_OCR=0
+shopt -s nocasematch
+[[ "$SECTION" =~ ocr ]] && IS_OCR=1
+shopt -u nocasematch
+[[ "$FORCE_OCR" == 1 ]] && IS_OCR=1
+
+# --------------------------------------------------------------------------- #
+# agentic speculative-decoding auto-wiring: lossless MTP speeds up generation
+# for free (the target model verifies every drafted token) whenever the model
+# actually has an MTP head available. Two shapes seen in this repo:
+#   1) self-speculative: the HF repo itself is an "-MTP-" build (Qwen3.6) —
+#      no separate drafter file, just spec-type=draft-mtp.
+#   2) separate drafter: a tiny sibling mtp-*.gguf next to the model
+#      (gemma-4-31B) — needs model-draft pointed at that file too.
+# Skipped for OCR models, with --no-agentic, or if this build lacks --spec-type
+# (newest-feature gate: only use it if the installed llama-server supports it).
+# --------------------------------------------------------------------------- #
+SPEC_TYPE=""; SPEC_DRAFT=""; SPEC_SRC=""
+if [[ "$IS_OCR" == 0 && "$AGENTIC" == 1 ]]; then
+    if ! supports_flag "spec-type"; then
+        note "installed llama-server ($SERVER_VERSION) does not support --spec-type; skipping MTP speculative decoding (upgrade llama.cpp to unlock it)"
+    elif [[ -n "$HC_MATCH_REPO" && "$HC_MATCH_REPO" =~ [Mm][Tt][Pp] ]]; then
+        SPEC_TYPE="draft-mtp"
+        SPEC_SRC="HF repo ($HC_MATCH_REPO) is an MTP build — embedded self-speculative head, no separate drafter file needed"
+    else
+        DRAFTER="$(find -L "$(dirname "$MODEL_PATH")" -maxdepth 1 -type f -iname '*mtp*.gguf' ! -iname "$(basename "$MODEL_PATH")" 2>/dev/null | head -n1)"
+        if [[ -n "$DRAFTER" ]]; then
+            SPEC_TYPE="draft-mtp"; SPEC_DRAFT="$DRAFTER"
+            SPEC_SRC="sibling drafter found next to the model: $(basename "$DRAFTER")"
+        fi
+    fi
+fi
+
+# --------------------------------------------------------------------------- #
+# agentic KV-cache / concurrency / reasoning defaults (skipped for OCR, or
+# with --no-agentic). Floors reflect asymmetric quantization sensitivity: K
+# (attention keys) degrades faster under quantization than V (values,
+# especially with flash-attn), so K never goes below q8_0 by default while V
+# can go as low as q4_0 — both are validated against what THIS build's
+# --cache-type-k/-v actually lists as supported (newest-feature gate), with a
+# graceful fallback + note if the installed llama-server is older/narrower.
+# --------------------------------------------------------------------------- #
+CACHE_K="f16"; CACHE_V="f16"
+CACHE_SRC="default f16 (max precision; OCR/no-agentic keep this conservative choice)"
+PARALLEL_VAL=""; CACHE_REUSE_VAL=""; REASONING_VAL=""
+if [[ "$IS_OCR" == 0 && "$AGENTIC" == 1 ]]; then
+    CACHE_K="q8_0"; CACHE_V="q4_0"
+    if ! cache_type_supported "$CACHE_K"; then
+        note "installed llama-server does not list 'q8_0' as a supported cache-type-k (allowed: ${CACHE_TYPES_ALLOWED:-unknown}); falling back to f16"
+        CACHE_K="f16"
+    fi
+    if ! cache_type_supported "$CACHE_V"; then
+        note "installed llama-server does not list 'q4_0' as a supported cache-type-v (allowed: ${CACHE_TYPES_ALLOWED:-unknown}); falling back to q8_0"
+        CACHE_V="q8_0"
+    fi
+    CACHE_SRC="agentic default: cache-type-k=q8_0 is the floor for K (attention keys are more sensitive to quantization loss), cache-type-v=q4_0 is the floor for V (values tolerate more aggressive quantization, especially with flash-attn) — frees the most KV memory for long agentic context at near-lossless quality"
+    PARALLEL_VAL=1
+    if supports_flag "cache-reuse"; then
+        CACHE_REUSE_VAL=256
+    else
+        note "installed llama-server ($SERVER_VERSION) does not support --cache-reuse; skipping prefix-reuse speedup (upgrade llama.cpp to unlock it)"
+    fi
+    if supports_flag "reasoning-format"; then
+        REASONING_VAL="auto"
+    fi
+fi
+if [[ -n "$FORCE_CACHE_K" ]]; then
+    if ! cache_type_supported "$FORCE_CACHE_K"; then
+        note "WARNING: '$FORCE_CACHE_K' is not in this build's allowed cache-type-k values (${CACHE_TYPES_ALLOWED:-unknown}) — setting it anyway, verify at load"
+    fi
+    case "$FORCE_CACHE_K" in
+        q8_0|bf16|f16|f32) ;;
+        *) note "WARNING: cache-type-k below q8_0 (got '$FORCE_CACHE_K') is more aggressive than recommended — K is more sensitive to quantization than V" ;;
+    esac
+    CACHE_K="$FORCE_CACHE_K"; CACHE_SRC="forced via --cache-k/--cache-v"
+fi
+if [[ -n "$FORCE_CACHE_V" ]]; then
+    if ! cache_type_supported "$FORCE_CACHE_V"; then
+        note "WARNING: '$FORCE_CACHE_V' is not in this build's allowed cache-type-v values (${CACHE_TYPES_ALLOWED:-unknown}) — setting it anyway, verify at load"
+    fi
+    CACHE_V="$FORCE_CACHE_V"; CACHE_SRC="forced via --cache-k/--cache-v"
+fi
 
 DEVICE="$(choose_device || true)"
 if [[ -z "$DEVICE" ]]; then
@@ -338,9 +537,23 @@ build_block() {
     printf 'n-gpu-layers = %s        # %s\n' "$NGL_VAL" "$NGL_SRC"
     [[ -n "$NCMOE_VAL" ]] && printf 'n-cpu-moe = %s           # %s\n' "$NCMOE_VAL" "$NCMOE_SRC"
     printf 'flash-attn = auto\n'
-    printf 'cache-type-k = f16\n'
-    printf 'cache-type-v = f16\n'
+    printf 'cache-type-k = %s        # %s\n' "$CACHE_K" "$CACHE_SRC"
+    printf 'cache-type-v = %s        # %s\n' "$CACHE_V" "$CACHE_SRC"
     printf 'jinja = true\n'
+    if [[ -n "$PARALLEL_VAL" ]]; then
+        printf 'parallel = %s            # agentic default: one active conversation gets the full ctx-size and full throughput instead of being split across slots\n' "$PARALLEL_VAL"
+    fi
+    if [[ -n "$CACHE_REUSE_VAL" ]]; then
+        printf 'cache-reuse = %s          # agentic default: reuse cached KV for repeated prefixes (system prompt, tool schemas) across turns instead of recomputing\n' "$CACHE_REUSE_VAL"
+    fi
+    if [[ -n "$REASONING_VAL" ]]; then
+        printf 'reasoning-format = %s    # newest-feature default: guarantees reasoning_content/tool_call separation on this llama-server build, regardless of its own default\n' "$REASONING_VAL"
+    fi
+    if [[ -n "$SPEC_TYPE" ]]; then
+        [[ -n "$SPEC_DRAFT" ]] && printf 'model-draft = %s\n' "$SPEC_DRAFT"
+        printf 'spec-type = %s           # %s\n' "$SPEC_TYPE" "$SPEC_SRC"
+        printf 'spec-draft-n-max = 4     # lossless MTP speculative decoding speedup; lower if the drafter'"'"'s acceptance rate is poor\n'
+    fi
     # vendor / model-card extras: only keys NOT owned by the hardware tuning above
     if [[ ${#EXTRA_KV[@]} -gt 0 ]]; then
         local kv key val seen=" "
@@ -349,8 +562,18 @@ build_block() {
             key="$(trim "${kv%%=*}")"; val="$(trim "${kv#*=}")"
             [[ -z "$key" || "$key" == "$kv" ]] && { note "ignoring malformed --extra '$kv' (need KEY=VALUE)"; continue; }
             if is_reserved "$key"; then
-                note "refused --extra '$key' — hardware-owned, kept the tuned value"
+                note "refused --extra '$key' — hardware/agentic-owned, kept the tuned value"
                 continue
+            fi
+            # agentic sampling preference: lower temp favored for determinism, but
+            # temp=0 (fully greedy, no creativity) requires an explicit --zero-temp-ok
+            # confirmation that the model card actually recommends it (OCR models are
+            # exempt — they're not "agentic" and determinism there isn't a trade-off).
+            if [[ "$key" == "temp" && "$IS_OCR" == 0 ]]; then
+                if [[ "$val" =~ ^0(\.0+)?$ && "$ZERO_TEMP_OK" != 1 ]]; then
+                    note "refused --extra temp=$val — temp=0 kills sampling diversity; pass --zero-temp-ok only if the model card explicitly recommends greedy decoding"
+                    continue
+                fi
             fi
             [[ "$seen" == *" $key "* ]] && continue
             seen+="$key "
@@ -361,10 +584,43 @@ build_block() {
 BLOCK="$(build_block)"
 
 # --------------------------------------------------------------------------- #
+# optimization diff vs the existing [SECTION] (if any) — makes re-tuning an
+# already-configured model transparent instead of silently overwriting it.
+# --------------------------------------------------------------------------- #
+print_optimization_diff() {
+    if [[ ${#OLD_KV[@]} -eq 0 ]]; then
+        note "No existing [$SECTION] section in $PRESET_FILE — this will be a new entry."
+        return
+    fi
+    note ""
+    note "===== OPTIMIZATION DIFF vs existing [$SECTION] ====="
+    local line key newval oldval seen=" "
+    while IFS= read -r line; do
+        [[ "$line" =~ ^([A-Za-z0-9_-]+)[[:space:]]*=[[:space:]]*([^#]*) ]] || continue
+        key="${BASH_REMATCH[1]}"; newval="$(trim "${BASH_REMATCH[2]}")"
+        seen+="$key "
+        [[ "$key" == "alias" || "$key" == "model" ]] && continue
+        oldval="${OLD_KV[$key]:-}"
+        if [[ -z "$oldval" ]]; then
+            note "  + $key = $newval   (new)"
+        elif [[ "$oldval" != "$newval" ]]; then
+            note "  ~ $key: $oldval -> $newval"
+        fi
+    done <<< "$BLOCK"
+    local k
+    for k in "${!OLD_KV[@]}"; do
+        [[ "$seen" == *" $k "* ]] && continue
+        note "  - $k = ${OLD_KV[$k]}   (no longer set — dropped or superseded)"
+    done
+    note "======================================================"
+}
+
+# --------------------------------------------------------------------------- #
 # report
 # --------------------------------------------------------------------------- #
 {
     printf '\n===== HARDWARE =====\n'
+    printf 'llama-server: %s\n' "${SERVER_VERSION:-unknown}"
     print_device_table
     printf 'CPU physical cores: %s   |   System RAM: %s\n' \
         "$( (command -v lscpu >/dev/null && c=$(lscpu | sed -n 's/^Core(s) per socket:[[:space:]]*//p') && s=$(lscpu | sed -n 's/^Socket(s):[[:space:]]*//p') && [[ "$c" =~ ^[0-9]+$ && "$s" =~ ^[0-9]+$ ]] && echo $((c*s)) ) 2>/dev/null || nproc)" \
@@ -379,8 +635,20 @@ BLOCK="$(build_block)"
     [[ -n "$N_CTX_TRAIN" ]] && printf 'n_ctx_train: %s\n' "$N_CTX_TRAIN"
     printf 'target dev: %s%s\n' "${DEVICE:-CPU}" \
         "$([[ -n "$DEVICE" ]] && echo " (${DEV_TOTAL}MiB total, margin ${MARGIN_MIB}MiB)")"
+    printf '\n===== AGENTIC TUNING =====\n'
+    printf 'mode      : %s\n' "$([[ $IS_OCR == 1 ]] && echo "OCR/document (agentic extras skipped)" || { [[ $AGENTIC == 1 ]] && echo "agentic (quality+speed tuned)" || echo "disabled via --no-agentic"; })"
+    printf 'cache-type: k=%s v=%s  (%s)\n' "$CACHE_K" "$CACHE_V" "$CACHE_SRC"
+    [[ -n "$PARALLEL_VAL" ]] && printf 'parallel  : %s\n' "$PARALLEL_VAL"
+    [[ -n "$CACHE_REUSE_VAL" ]] && printf 'cache-reuse: %s\n' "$CACHE_REUSE_VAL"
+    if [[ "$IS_OCR" == 0 && "$AGENTIC" == 1 ]]; then
+        printf 'reasoning-format: %s\n' "${REASONING_VAL:-not supported by this build}"
+    fi
+    if [[ -n "$SPEC_TYPE" ]]; then
+        printf 'speculative: spec-type=%s (%s)\n' "$SPEC_TYPE" "$SPEC_SRC"
+    else
+        printf 'speculative: none (no embedded/sibling MTP drafter found)\n'
+    fi
     printf '\n===== MODEL CARD (HuggingFace) =====\n'
-    HC="$(hf_candidates)"
     if [[ -n "$HC" ]]; then
         printf '  %-6s %-42s %s\n' MATCH REPO_ID URL
         while IFS=$'\t' read -r mark repo file url; do
@@ -397,6 +665,7 @@ BLOCK="$(build_block)"
             "${FIT_NGL:-?}" "${FIT_NCMOE:-?}" "${FIT_CTX:-?}"
         grep -iE 'fit|gpu_layers|cpu_moe|n_ctx|MiB|offload|memory' <<< "$FIT_LOG" | tail -n 25 || true
     fi
+    print_optimization_diff
 } >&2
 
 printf '\n===== preset section for %s =====\n' "$LLAMA_PRESET"
