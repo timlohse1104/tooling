@@ -7,10 +7,10 @@ printf "Copy functions to user's home directory...\n"
 cp .bashrc-functions ~/.bashrc-functions
 
 # Check current ~/.bashrc for appearence of # CUSTOM START and # CUSTOM END and grep the lines between them into a variable
-current_bashrc_custom_lines=$(grep -A 1000 -B 1000 -E '^# CUSTOM START|^- *# CUSTOM END' ~/.bashrc)
+current_bashrc_custom_lines=$(grep -A 1000 -B 1000 -E '^# CUSTOM START|^# CUSTOM END' ~/.bashrc)
 
 # Grep the lines between # CUSTOM START and # CUSTOM END in the .bashrc in this folder into a variable
-new_bashrc_custom_lines=$(grep -A 1000 -B 1000 -E '^# CUSTOM START|^- *# CUSTOM END' .bashrc)
+new_bashrc_custom_lines=$(grep -A 1000 -B 1000 -E '^# CUSTOM START|^# CUSTOM END' .bashrc)
 
 # Check if current_bashrc_custom_lines is not empty and set new_bashrc_custom_lines instead of current_bashrc_custom_lines in the ~/.bashrc file at the location of # CUSTOM START and # CUSTOM END
 if [ -n "$current_bashrc_custom_lines" ]; then

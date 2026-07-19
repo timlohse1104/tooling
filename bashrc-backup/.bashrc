@@ -2,12 +2,15 @@
 PS1='\[\033[01;34m\]\u\[\033[00m\]@\[\033[01;32m\]\w\[\033[00m\]\$ '
 export KUBE_EDITOR=nano
 
-# Load alias file
+## Keys
+export OPENROUTER_API_KEY=insert_api_key_here
+
+## Load alias file
 if [ -f ~/.bashrc-aliases ]; then
   . ~/.bashrc-aliases
 fi
 
-# Load functions file
+## Load functions file
 if [ -f ~/.bashrc-functions ]; then
   . ~/.bashrc-functions
 fi
