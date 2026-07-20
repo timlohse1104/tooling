@@ -1,32 +1,70 @@
 #!/bin/bash
+# ============================================================
+# OpenCode personal-config installer (add-only).
+#
+# Copies this backup's personal opencode.jsonc, agents/ and skills/
+# into ~/.config/opencode/ WITHOUT removing anything already there.
+# Other sources (e.g. the C4 team installer) may have installed their
+# own agents/skills/plugins/scripts alongside these — this script must
+# never wipe them. Files this script would overwrite are backed up first.
+# ============================================================
+set -euo pipefail
 
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 TARGET_DIR="$HOME/.config/opencode"
 TARGET_FILE="$TARGET_DIR/opencode.jsonc"
-AGENTS_SRC_DIR="agents"
+AGENTS_SRC_DIR="$SCRIPT_DIR/agents"
 AGENTS_TARGET_DIR="$TARGET_DIR/agents"
-SKILLS_SRC_DIR="skills"
+SKILLS_SRC_DIR="$SCRIPT_DIR/skills"
 SKILLS_TARGET_DIR="$TARGET_DIR/skills"
 
-if [ ! -d "$TARGET_DIR" ]; then
-    printf "Creating directory %s...\n" "$TARGET_DIR"
-    mkdir -p "$TARGET_DIR"
-fi
+mkdir -p "$TARGET_DIR"
 
-printf "Copying opencode.jsonc to %s...\n" "$TARGET_FILE"
-cp opencode.jsonc "$TARGET_FILE"
+# Back up an existing destination file before it gets overwritten.
+backup_if_exists() {
+    local f="$1"
+    [ -f "$f" ] || return 0
+    local b="${f}.bak.$(date +%Y%m%d_%H%M%S)"
+    cp "$f" "$b"
+    printf "  Backup: %s\n" "$b"
+}
 
+# Copy a single file into place, backing up any existing target first.
+install_file() {
+    local src="$1" dst="$2"
+    mkdir -p "$(dirname "$dst")"
+    backup_if_exists "$dst"
+    cp "$src" "$dst"
+    printf "  Installed: %s\n" "$dst"
+}
+
+printf "Installing personal opencode.jsonc -> %s\n" "$TARGET_FILE"
+install_file "$SCRIPT_DIR/opencode.jsonc" "$TARGET_FILE"
+
+# Add agent definitions without deleting agents from other sources.
 if [ -d "$AGENTS_SRC_DIR" ] && compgen -G "$AGENTS_SRC_DIR/*.md" > /dev/null; then
-    printf "Syncing agents to %s...\n" "$AGENTS_TARGET_DIR"
-    rm -rf "$AGENTS_TARGET_DIR"
-    mkdir -p "$AGENTS_TARGET_DIR"
-    cp "$AGENTS_SRC_DIR"/*.md "$AGENTS_TARGET_DIR"/
+    printf "Adding agents to %s (existing files kept)...\n" "$AGENTS_TARGET_DIR"
+    for f in "$AGENTS_SRC_DIR"/*.md; do
+        install_file "$f" "$AGENTS_TARGET_DIR/$(basename "$f")"
+    done
 fi
 
+# Add skills without deleting skills from other sources.
 if [ -d "$SKILLS_SRC_DIR" ]; then
-    printf "Syncing skills to %s...\n" "$SKILLS_TARGET_DIR"
-    rm -rf "$SKILLS_TARGET_DIR"
-    mkdir -p "$SKILLS_TARGET_DIR"
-    cp -R "$SKILLS_SRC_DIR"/. "$SKILLS_TARGET_DIR"/
+    printf "Adding skills to %s (existing skills kept)...\n" "$SKILLS_TARGET_DIR"
+    shopt -s nullglob
+    for skill_dir in "$SKILLS_SRC_DIR"/*/; do
+        name="$(basename "$skill_dir")"
+        printf "  Skill: %s\n" "$name"
+        # Copy the skill's contents in without removing the target dir, so a
+        # skill of the same name is updated file-by-file (backing up changed
+        # files) rather than wiped-and-replaced.
+        while IFS= read -r -d '' src; do
+            rel="${src#"$skill_dir"}"
+            install_file "$src" "$SKILLS_TARGET_DIR/$name/$rel"
+        done < <(find "$skill_dir" -type f -print0)
+    done
+    shopt -u nullglob
 fi
 
-printf "Installation complete! opencode configuration updated successfully.\n"
+printf "Installation complete! opencode configuration updated (add-only).\n"

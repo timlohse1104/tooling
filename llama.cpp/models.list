@@ -54,5 +54,27 @@ deepreinforce-ai/Ornith-1.0-35B-GGUF | ornith-1.0-35b-Q4_K_M.gguf   | Ornith-1.0
 sahilchachra/Unlimited-OCR-GGUF    | Unlimited-OCR-Q8_0.gguf            | Unlimited-OCR
 sahilchachra/Unlimited-OCR-GGUF    | mmproj-Unlimited-OCR-F16.gguf      | Unlimited-OCR
 
+# --- Soofi-S-Instruct-Preview (SOOFI Consortium, closed beta) — non-thinking
+# agentic instruct variant --------------------------------------------------
+# 32B total / 3.5B active MoE (arch nemotron_h_moe, hybrid Mamba-2/MoE: 23
+# Mamba-2/MoE layers + 6 attention layers, 128 experts + 1 shared, 6 active
+# per token). Gated repo (manual approval) — request/accept access on the HF
+# model page with the account matching HF_TOKEN in config.env; a valid token
+# alone is NOT enough (verified: whoami succeeds, resolve still 403 "not in
+# the authorized list").
+# NOTE: despite the model card's size table listing a Q4_K_M (~21 GB) quant,
+# the repo's actual file listing (HF API, checked 2026-07-19) only contains
+# Q5_K_M (24.25 GiB) and Q8_0 (31.28 GiB) — no Q4_K_M has been uploaded yet.
+# Q5_K_M is therefore the smallest quant that ACTUALLY EXISTS, and at
+# 24.25 GiB it is already slightly larger than the 7900 XTX's 24560 MiB
+# (23.98 GiB) total VRAM — weights alone don't fit fully; needs n-cpu-moe to
+# offload some MoE expert layers to CPU (this arch supports it: 3.5B of the
+# 32B total are active per token). Custom architecture — needs a llama.cpp
+# build that understands nemotron_h_moe; verify against the actual
+# checkpoint. Non-thinking by default (no <think> block); use --jinja for
+# the model's native tool-calling format. Vendor sampling (from the model's
+# Ollama Modelfile): temp 0.6, top-p 0.95.
+Soofi-Project/Soofi-S-Instruct-Preview-GGUF | soofi-s-instruct-preview-Q5_K_M.gguf | Soofi-S-Instruct-Preview
+
 # --- Optional: Qwen fixed chat template (referenced by presets) ------------
 # froggeric/Qwen-Fixed-Chat-Templates | chat_template.jinja | ../templates
