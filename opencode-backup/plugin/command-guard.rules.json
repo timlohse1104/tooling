@@ -1,0 +1,129 @@
+{
+  "$comment": "Rules for command-guard.js. Fragments are normalised (wrappers/absolute-paths/base64/here-docs/`-c` payloads stripped or decoded) BEFORE matching, so these regexes see the real verb even when the model tries `env git`, `/usr/bin/git`, `$(which git)`, `base64 -d | bash`, `bash -c '...'`, `python3 -c '...'`, etc. Patterns are case-insensitive. action: deny (hard block) | ask (hard block asking for explicit human approval) | warn (log + pass through). A fragment matches a rule if ANY `patterns` regex hits AND NO `unless` regex hits. Tune freely — this is add-only, not a security boundary; real enforcement belongs in an OS sandbox (bubblewrap/Landlock).",
+  "enabled": true,
+  "failClosed": true,
+  "rules": [
+    {
+      "id": "rm-rf-dangerous-target",
+      "action": "deny",
+      "message": "Recursive/force delete targeting /, ~, $HOME, /etc, /usr, /var, /boot or a wildcard at filesystem root is blocked outright.",
+      "patterns": [
+        "\\brm\\b[^\\n]*-[a-z]*r[a-z]*f?[^\\n]*\\s(?:/|~|\\$?HOME|/etc|/usr|/var|/boot|/bin|/lib|/opt|/root)(?:\\s|/\\*|$)",
+        "\\brm\\b[^\\n]*-[a-z]*f[a-z]*r?[^\\n]*\\s(?:/|~|\\$?HOME|/etc|/usr|/var|/boot|/bin|/lib|/opt|/root)(?:\\s|/\\*|$)",
+        "\\brmtree\\b|shutil\\.rmtree\\s*\\(\\s*['\"](?:/|~)"
+      ]
+    },
+    {
+      "id": "rm-any",
+      "action": "ask",
+      "message": "No rm command runs unconfirmed: every file/directory deletion needs explicit human approval. (Deletion of / ~ $HOME or system paths is blocked outright by rm-rf-dangerous-target.)",
+      "patterns": [
+        "(?:^|[\\s|;&(])rm(?:\\s|$)",
+        "\\bunlink\\b",
+        "shutil\\.rmtree|os\\.remove\\b|os\\.unlink\\b|pathlib[^\\n]*\\.unlink\\("
+      ]
+    },
+    {
+      "id": "git-force-push",
+      "action": "ask",
+      "message": "Force-push rewrites remote history. Use --force-with-lease and confirm the target branch.",
+      "patterns": [
+        "\\bgit\\b[^\\n]*\\bpush\\b[^\\n]*(?:--force\\b|-f\\b)"
+      ],
+      "unless": ["--force-with-lease"]
+    },
+    {
+      "id": "git-hard-reset",
+      "action": "ask",
+      "message": "`git reset --hard` discards uncommitted work. Confirm before running.",
+      "patterns": ["\\bgit\\b[^\\n]*\\breset\\b[^\\n]*--hard"]
+    },
+    {
+      "id": "git-clean-force",
+      "action": "deny",
+      "message": "`git clean -f`/-fdx wipes untracked files (a classic accidental data-loss). Blocked.",
+      "patterns": ["\\bgit\\b[^\\n]*\\bclean\\b[^\\n]*-[a-z]*f"]
+    },
+    {
+      "id": "git-checkout-discard-all",
+      "action": "ask",
+      "message": "`git checkout .` / `git restore .` discards all local changes. Confirm before running.",
+      "patterns": [
+        "\\bgit\\b[^\\n]*\\bcheckout\\b\\s+\\.(?:\\s|$)",
+        "\\bgit\\b[^\\n]*\\brestore\\b[^\\n]*\\s\\.(?:\\s|$)",
+        "checkout['\"]\\s*,\\s*['\"]\\.['\"]",
+        "restore['\"]\\s*,\\s*['\"]\\.['\"]"
+      ]
+    },
+    {
+      "id": "git-history-rewrite",
+      "action": "ask",
+      "message": "History-rewriting git ops (filter-branch/filter-repo/rebase -i, reflog expire, gc --prune=now) can destroy commits. Confirm.",
+      "patterns": [
+        "\\bgit\\b[^\\n]*\\bfilter-branch\\b",
+        "\\bgit\\b[^\\n]*\\bfilter-repo\\b",
+        "\\bgit\\b[^\\n]*\\breflog\\b[^\\n]*\\bexpire\\b",
+        "\\bgit\\b[^\\n]*\\bgc\\b[^\\n]*--prune=now"
+      ]
+    },
+    {
+      "id": "curl-pipe-shell",
+      "action": "deny",
+      "message": "Piping a downloaded script straight into a shell (curl|bash / wget|sh) is blocked. Download, review, then run.",
+      "patterns": [
+        "\\b(?:curl|wget)\\b[^\\n]*\\|\\s*(?:(?:ba|z|k|da|a)?sh|python[0-9.]*)\\b"
+      ]
+    },
+    {
+      "id": "dd-to-block-device",
+      "action": "deny",
+      "message": "Raw `dd` writes to a device path are blocked (can destroy disks).",
+      "patterns": ["\\bdd\\b[^\\n]*\\bof=/dev/"]
+    },
+    {
+      "id": "mkfs-and-partitioning",
+      "action": "deny",
+      "message": "Filesystem creation/partitioning tools are blocked.",
+      "patterns": [
+        "\\bmkfs(?:\\.[a-z0-9]+)?\\b",
+        "\\bfdisk\\b|\\bparted\\b|\\bsgdisk\\b|\\bwipefs\\b"
+      ]
+    },
+    {
+      "id": "overwrite-block-device-redirect",
+      "action": "deny",
+      "message": "Redirecting output onto a /dev/ device or into /sys is blocked.",
+      "patterns": [">\\s*/dev/(?:sd|nvme|vd|mmcblk|disk)", ">\\s*/sys/"]
+    },
+    {
+      "id": "chmod-777-recursive-system",
+      "action": "ask",
+      "message": "Recursive world-writable chmod on a system/home path is dangerous. Confirm scope.",
+      "patterns": ["\\bchmod\\b[^\\n]*-R[^\\n]*\\b777\\b\\s*(?:/|~|\\$HOME)"]
+    },
+    {
+      "id": "fork-bomb",
+      "action": "deny",
+      "message": "Fork-bomb pattern detected. Blocked.",
+      "patterns": [":\\(\\)\\s*\\{\\s*:\\|:", "\\bwhile\\s+true\\b[^\\n]*&\\s*$"]
+    },
+    {
+      "id": "secret-exfil-read",
+      "action": "deny",
+      "message": "Reading private keys / credentials via a shell command is blocked (use is almost never legitimate for the agent).",
+      "patterns": [
+        "\\b(?:cat|less|more|head|tail|xxd|od|strings|base64)\\b[^\\n]*(?:id_rsa|id_ed25519|id_ecdsa|\\.ssh/|\\.aws/credentials|\\.kube/config|/etc/shadow|\\.pem\\b|\\.p12\\b|\\.pfx\\b|\\.netrc)"
+      ]
+    },
+    {
+      "id": "disable-shell-history",
+      "action": "warn",
+      "message": "Command tries to disable/erase shell history — flagged for visibility.",
+      "patterns": [
+        "\\bunset\\s+HISTFILE\\b",
+        "\\bhistory\\s+-c\\b",
+        ">\\s*~?/?\\.bash_history"
+      ]
+    }
+  ]
+}

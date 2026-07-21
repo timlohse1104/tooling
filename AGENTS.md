@@ -20,8 +20,10 @@ tooling/
 ├── opencode-backup/
 │   ├── opencode.jsonc               # OpenCode global config
 │   ├── agents/                      # OpenCode primary/subagent markdown defs
-│   │   └── research.md                # Read-only recon/research primary agent
-│   └── install.sh                   # Copies config + agents/ to ~/.config/opencode/
+│   ├── plugin/                      # OpenCode plugins (auto-loaded from ~/.config/opencode/plugin/)
+│   │   ├── command-guard.js           # Generic bash guard (normalises + recurses, then deny/ask/warn)
+│   │   └── command-guard.rules.json   # Editable rule set for command-guard
+│   └── install.sh                   # Copies config + agents/ + plugin/ to ~/.config/opencode/
 ├── claude-backup/
 │   ├── .claude/                     # settings.json, mcp.json, commands/, skills/
 │   └── install.sh                   # Copies to ~/.claude/
@@ -48,7 +50,7 @@ tooling/
 | Local llama.cpp (Vulkan) | `cd llama.cpp && cp config.env.example config.env && bash bootstrap.sh` |
 
 - `bashrc-backup/install.bash` deletes the `# CUSTOM START` … `# CUSTOM END` block from `~/.bashrc`, appends the new block at the end, then calls `exec bash -l` to reload the shell.
-- `opencode-backup/install.sh` copies `opencode.jsonc` to `~/.config/opencode/opencode.jsonc` and any `agents/*.md` to `~/.config/opencode/agents/` (creates dirs if needed).
+- `opencode-backup/install.sh` copies `opencode.jsonc` to `~/.config/opencode/opencode.jsonc`, any `agents/*.md` to `~/.config/opencode/agents/`, and `plugin/*.js` to `~/.config/opencode/plugin/` (creates dirs if needed). Add-only: existing agents/plugins from other sources are kept. `command-guard.rules.json` is only copied if not already present, so local rule edits survive re-runs; the `.js` is always refreshed (previous version backed up).
 - `claude-backup/install.sh` copies `settings.json`, `settings.local.json`, `mcp.json`, `commands/`, and `skills/` into `~/.claude/`. Note: `settings.local.json` is in `.gitignore` and won't be present in a fresh clone — the script will fail on that step; ignore or create an empty file first.
 
 ## Key aliases (after install)
@@ -99,7 +101,8 @@ tooling/
 - Unlimited-OCR (Baidu, MIT, VLM): 3B DeepSeek-OCR-architecture model for one-shot long-horizon document parsing. Needs both `Unlimited-OCR-Q4_K_M.gguf` and `mmproj-Unlimited-OCR-F16.gguf` (preset key `mmproj = …`). Upstream support via PR #17400 (merged 2026-03-25), included in b9827. Prompts: `OCR`, `OCR markdown`, `<|grounding|>OCR` (with bboxes). Do NOT set `chat-template = deepseek-ocr` on the server.
 - Enabled providers: `lieselotte`, `hermine`, `anthropic`, `openrouter`
 - `openrouter` is the built-in OpenRouter provider (models preloaded from Models.dev); its API key is read from the `OPENROUTER_API_KEY` env var via `"apiKey": "{env:OPENROUTER_API_KEY}"` instead of `/connect`
-- Plugin: `opencode-claude-auth@latest`; `share: disabled`
+- Plugin (npm): `opencode-claude-auth@latest`; `share: disabled`
+- Plugin (local, dir-autoloaded from `~/.config/opencode/plugin/`): `command-guard.js` — a generic bash guard that hooks `tool.execute.before`, **normalises** each command (strips `env`/`sudo`/`nice`/`timeout` wrappers, resolves absolute paths & `$(which x)` to bare verbs, decodes `base64 -d | bash`, reads here-docs, and re-scans `bash -c`/`python3 -c` payloads) and **recursively splits** it across pipes/`&&`/`;`/subshells before matching. This closes the string-glob bypasses the wren.wtf "Stop Using OpenCode" post calls out (`env git`, `/usr/bin/git`, `$(which git)`, base64→bash, here-docs, `python3 -c`). Rules live in the editable `command-guard.rules.json` (`action`: `deny` hard-block / `ask` hard-block-requesting-approval / `warn` log+pass; `failClosed` blocks undecodable payloads). Defaults: **every `rm`/`unlink` (any flags/target) requires confirmation (`ask`) — nothing deletes silently**, while `rm -rf /`~/`$HOME`/system paths is hard-denied outright; plus force-push, hard-reset, `git clean -f`, history rewrites, `curl|bash`, `dd`/`mkfs` to devices, secret-file reads, fork-bombs. Not a sandbox — a seatbelt; real enforcement still belongs in an OS sandbox (bubblewrap/Landlock). Override the rule path via `COMMAND_GUARD_RULES`.
 - Read permission: `.env` and `.env.*` denied; `.env.example` / `.env.default` allowed
 - MCP servers: `atlassian` (remote OAuth at `https://mcp.atlassian.com/v1/mcp`) and `playwright` (local via `npx @playwright/mcp@latest`)
 - Many read-only kubectl, gh, aws, helm, flux, git, docker commands are pre-allowed (no prompt)

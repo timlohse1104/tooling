@@ -17,6 +17,8 @@ AGENTS_SRC_DIR="$SCRIPT_DIR/agents"
 AGENTS_TARGET_DIR="$TARGET_DIR/agents"
 SKILLS_SRC_DIR="$SCRIPT_DIR/skills"
 SKILLS_TARGET_DIR="$TARGET_DIR/skills"
+PLUGIN_SRC_DIR="$SCRIPT_DIR/plugin"
+PLUGIN_TARGET_DIR="$TARGET_DIR/plugin"
 
 mkdir -p "$TARGET_DIR"
 
@@ -63,6 +65,28 @@ if [ -d "$SKILLS_SRC_DIR" ]; then
             rel="${src#"$skill_dir"}"
             install_file "$src" "$SKILLS_TARGET_DIR/$name/$rel"
         done < <(find "$skill_dir" -type f -print0)
+    done
+    shopt -u nullglob
+fi
+
+# Add plugins (auto-loaded from ~/.config/opencode/plugin/*.js) without
+# deleting plugins from other sources (e.g. the C4 team's prod-guard.js).
+# The command-guard rule file is only installed if the target does not already
+# exist, so local rule customisations survive re-running the installer; the
+# .js is always refreshed (backing up the previous version).
+if [ -d "$PLUGIN_SRC_DIR" ]; then
+    printf "Adding plugins to %s (existing files kept)...\n" "$PLUGIN_TARGET_DIR"
+    shopt -s nullglob
+    for src in "$PLUGIN_SRC_DIR"/*.js; do
+        install_file "$src" "$PLUGIN_TARGET_DIR/$(basename "$src")"
+    done
+    for src in "$PLUGIN_SRC_DIR"/*.rules.json; do
+        dst="$PLUGIN_TARGET_DIR/$(basename "$src")"
+        if [ -f "$dst" ]; then
+            printf "  Kept existing rules (not overwritten): %s\n" "$dst"
+        else
+            install_file "$src" "$dst"
+        fi
     done
     shopt -u nullglob
 fi
