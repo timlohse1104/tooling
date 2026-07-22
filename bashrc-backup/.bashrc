@@ -4,6 +4,7 @@ export KUBE_EDITOR=nano
 
 ## Keys
 export OPENROUTER_API_KEY=insert_api_key_here
+export ELEKTRONENGEHIRN_API_KEY=insert_api_key_here
 
 ## Load alias file
 if [ -f ~/.bashrc-aliases ]; then

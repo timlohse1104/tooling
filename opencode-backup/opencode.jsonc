@@ -80,6 +80,20 @@
       "options": {
         "apiKey": "{env:OPENROUTER_API_KEY}"
       }
+    },
+    "elektronengehirn": {
+      "npm": "@ai-sdk/openai-compatible",
+      "name": "Elektronengehirn (stadt.werk)",
+      "options": {
+        "baseURL": "https://elektronengehirn.stadtwerk.org/v1",
+        "apiKey": "{env:ELEKTRONENGEHIRN_API_KEY}"
+      },
+      "models": {
+        "gemma-3-12b-it": {
+          "name": "Gemma 3 12B IT",
+          "modalities": { "input": ["text"], "output": ["text"] }
+        }
+      }
     }
   }
 }
