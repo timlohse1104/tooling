@@ -10,49 +10,31 @@
 # Downloads land in $LLAMA_MODELS_DIR (OUTSIDE this repo) and are never committed.
 
 # --- Your models -----------------------------------------------------------
-# NOTE: unsloth's MTP repos publish files without an "-mtp" suffix; the MTP
-# variant is encoded in the repo name. Filenames below match exactly what
-# huggingface serves — presets/OpenCode reference these names directly.
 unsloth/Qwen3.6-27B-MTP-GGUF       | Qwen3.6-27B-IQ4_XS.gguf            | Qwen3.6-27B
 unsloth/Qwen3.6-35B-A3B-MTP-GGUF   | Qwen3.6-35B-A3B-UD-IQ4_XS.gguf     | Qwen3.6-35B-A3B
-unsloth/gemma-4-26B-A4B-it-qat-GGUF | gemma-4-26B-A4B-it-qat-UD-Q4_K_XL.gguf | gemma-4-26B-A4B
-
-# --- Qwen-AgentWorld (Qwen, Apache-2.0) — language world model -------------
-# 35B-A3B MoE (arch qwen35moe, hybrid Gated-DeltaNet + Gated-Attention, 262k
-# ctx) trained to simulate 7 agentic environments (MCP/Search/Terminal/SWE/
-# Android/Web/OS) via long CoT. UD-IQ4_XS (17.8 GB) fits fully on the 24 GB
-# 7900 XTX with room for a large KV-cache. Vendor sampling: temp 0.6, top-p
-# 0.95, top-k 20; thinking mode on by default. See presets/models.ini.
-unsloth/Qwen-AgentWorld-35B-A3B-GGUF | Qwen-AgentWorld-35B-A3B-UD-IQ4_XS.gguf | Qwen-AgentWorld-35B-A3B
+#unsloth/gemma-4-26B-A4B-it-qat-GGUF | gemma-4-26B-A4B-it-qat-UD-Q4_K_XL.gguf | gemma-4-26B-A4B
 
 # --- Gemma 4 31B (Google/unsloth, Apache-2.0) — dense QAT VLM ---------------
-# Dense 31B (arch gemma4, 60 layers). Hybrid attention: local sliding-window
-# (1024) layers + periodic global layers (unified K/V + Proportional RoPE), so
-# the growing KV-cache lives only in the few global layers → long ctx is cheap
-# on VRAM. QAT (quantization-aware) UD-Q4_K_XL (17.3 GB) keeps near-bf16 quality
-# and fits the 24 GB 7900 XTX. Native 256K ctx. Vendor sampling: temp 1.0,
-# top-p 0.95, top-k 64; thinking is opt-in via a <|think|> token → jinja=true.
-# The tiny MTP drafter (mtp-gemma-4-31B-it.gguf, ~280 MB, near-lossless Q4_0)
-# enables speculative decoding (spec-type=draft-mtp) — download it too.
 unsloth/gemma-4-31B-it-qat-GGUF    | gemma-4-31B-it-qat-UD-Q4_K_XL.gguf | gemma-4-31B
 unsloth/gemma-4-31B-it-qat-GGUF    | mtp-gemma-4-31B-it.gguf            | gemma-4-31B
 # Optional vision projector (Text+Image); enable via preset key `mmproj = …`:
-# unsloth/gemma-4-31B-it-qat-GGUF  | mmproj-F16.gguf                    | gemma-4-31B
+unsloth/gemma-4-31B-it-qat-GGUF  | mmproj-F16.gguf                    | gemma-4-31B
+
+# --- Laguna XS 2.1 (poolside, OpenMDW-1.1) — agentic coding MoE ------------
+# 33B total / 3B active. bartowski's imatrix IQ4_XS (18.2 GB) leaves the most
+# room for KV-cache/compute on a 24 GB card.
+bartowski/Laguna-XS-2.1-GGUF       | Laguna-XS-2.1-IQ4_XS.gguf           | Laguna-XS-2.1
+
+# --- Qwen-AgentWorld (Qwen, Apache-2.0) — language world model -------------
+# unsloth/Qwen-AgentWorld-35B-A3B-GGUF | Qwen-AgentWorld-35B-A3B-UD-IQ4_XS.gguf | Qwen-AgentWorld-35B-A3B
 
 # --- Ornith-1.0 (DeepReinforce, MIT) — agentic coding ----------------------
-# 9B dense  : full-VRAM fit at Q8_0 + 262k ctx with q8_0 KV-cache
-# 35B MoE   : Q4_K_M (21.2 GB) sweet spot for 24 GB VRAM at ~32k ctx
-deepreinforce-ai/Ornith-1.0-9B-GGUF  | ornith-1.0-9b-Q8_0.gguf      | Ornith-1.0-9B
-deepreinforce-ai/Ornith-1.0-35B-GGUF | ornith-1.0-35b-Q4_K_M.gguf   | Ornith-1.0-35B
+# deepreinforce-ai/Ornith-1.0-9B-GGUF  | ornith-1.0-9b-Q8_0.gguf      | Ornith-1.0-9B
+# deepreinforce-ai/Ornith-1.0-35B-GGUF | ornith-1.0-35b-Q4_K_M.gguf   | Ornith-1.0-35B
 
 # --- Unlimited-OCR (Baidu, MIT) — VLM, one-shot long-horizon doc parsing ---
-# 3B VLM on DeepSeek-OCR architecture (SAM+CLIP DeepEncoder + DeepSeek-V2 MoE).
-# Needs BOTH the LM GGUF *and* the F16 vision projector (mmproj). DeepSeek-OCR
-# support landed in llama.cpp master via PR #17400 (merged 2026-03-25); the
-# installed b9827 Vulkan prebuilt contains it. Run via llama-server with
-# --mmproj or llama-mtmd-cli; clients send images as base64 image_url parts.
-sahilchachra/Unlimited-OCR-GGUF    | Unlimited-OCR-Q8_0.gguf            | Unlimited-OCR
-sahilchachra/Unlimited-OCR-GGUF    | mmproj-Unlimited-OCR-F16.gguf      | Unlimited-OCR
+# sahilchachra/Unlimited-OCR-GGUF    | Unlimited-OCR-Q8_0.gguf            | Unlimited-OCR
+# sahilchachra/Unlimited-OCR-GGUF    | mmproj-Unlimited-OCR-F16.gguf      | Unlimited-OCR
 
 # --- Soofi-S-Instruct-Preview (SOOFI Consortium, closed beta) — non-thinking
 # agentic instruct variant --------------------------------------------------

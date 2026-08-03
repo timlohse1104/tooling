@@ -53,9 +53,13 @@
         "gemma-4-31B": {
           "name": "Gemma 4 31B Dense QAT + MTP",
           "modalities": {"input": ["text", "image"], "output": ["text"]}
+        },
+        "Laguna-XS-2.1": {
+          "name": "Laguna XS 2.1 33B-A3B Agentic Coder",
+          "modalities": {"input": ["text"], "output": ["text"]}
         }
       },
-      "whitelist": ["Qwen3.6-27B", "Qwen3.6-35B-A3B", "gemma-4-26B-A4B", "ornith-1.0-9b", "ornith-1.0-35b", "Qwen-AgentWorld-35B-A3B", "gemma-4-31B"]
+      "whitelist": ["Qwen3.6-27B", "Qwen3.6-35B-A3B", "gemma-4-26B-A4B", "ornith-1.0-9b", "ornith-1.0-35b", "Qwen-AgentWorld-35B-A3B", "gemma-4-31B", "Laguna-XS-2.1"]
     },
     "hermine": {
       "npm": "@ai-sdk/openai-compatible",
@@ -72,9 +76,13 @@
         "gemma-4-31B": {
           "name": "Gemma 4 31B Dense QAT + MTP",
           "modalities": {"input": ["text", "image"], "output": ["text"]}
+        },
+        "Laguna-XS-2.1": {
+          "name": "Laguna XS 2.1 33B-A3B Agentic Coder",
+          "modalities": {"input": ["text"], "output": ["text"]}
         }
       },
-      "whitelist": ["Qwen3.6-27B", "gemma-4-31B"]
+      "whitelist": ["Qwen3.6-27B", "gemma-4-31B", "Laguna-XS-2.1"]
     },
     "openrouter": {
       "options": {
