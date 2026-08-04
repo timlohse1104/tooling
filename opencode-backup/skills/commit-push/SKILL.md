@@ -10,10 +10,11 @@ file in, they add it themselves first.
 
 ## Steps
 
-1. **Look** — `git status --short` and `git diff` in parallel. The diff is what the message
-   is derived from.
-2. **Stage** — `git add -u`. This stages modifications and deletions of tracked files and
-   nothing else, so an untracked `.env` or credential file cannot slip in.
+1. **Look** — `git status --short`, `git diff` and `git diff --name-only` in parallel. The
+   diff is what the message is derived from; `--name-only` is the list to stage.
+2. **Stage** — `git add <path> …` with those names spelled out, never `git add -A`, `.` or
+   `-u`. The names come from `git diff --name-only`, which lists modifications and deletions
+   of tracked files only, so an untracked `.env` or credential file cannot end up in the list.
 3. **Commit** — `git commit -m "<gitmoji> <message>"`. If the user supplied a message, use it
    verbatim and only prepend the gitmoji.
 4. **Push** — `git push`, or `git push -u origin <branch>` when the branch has no upstream.
@@ -21,8 +22,7 @@ file in, they add it themselves first.
 
 ## Message
 
-English, one sentence. A second sentence is fine when the change is genuinely broad, and
-never more than that. Say what changed and why, not which files.
+English, exactly one sentence. Say what changed and why, not which files.
 
 | Gitmoji | When |
 |---------|------|
@@ -38,4 +38,4 @@ never more than that. Say what changed and why, not which files.
 
 - Never `--force`, `--no-verify`, or `--amend`.
 - A rejecting pre-commit hook means fix the cause and make a **new** commit.
-- Nothing to stage after `git add -u` → say so and stop. Do not invent a commit.
+- Empty `git diff --name-only` → say so and stop. Do not invent a commit.
