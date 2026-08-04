@@ -1,64 +1,41 @@
 ---
 name: commit-push
-description: Führt einen vollständigen Commit-und-Push-Workflow durch. Auslösen bei Anfragen wie "committe meine Änderungen", "push das", "erstelle einen Commit" oder dem Befehl /commit-push.
-disable-model-invocation: true
+description: Committet alle von git getrackten Änderungen und pusht sie. Auslösen bei Anfragen wie "committe meine Änderungen", "push das", "commit und push" oder dem Befehl /commit-push.
 ---
 
-Führe einen vollständigen Commit-und-Push-Workflow durch. Falls `$ARGUMENTS` übergeben wurde, verwende es als Commit-Nachricht. Andernfalls leite eine kurze Nachricht (max. 1 Satz, Englisch, Imperativ) aus den Änderungen ab.
+# commit-push
 
-## Schritte
+Commit every tracked change, then push. Untracked files stay out — if the user wants a new
+file in, they add it themselves first.
 
-### 1. Status analysieren
-Führe folgende Befehle parallel aus:
-- `git status` — zeigt untracked und geänderte Dateien
-- `git diff` — zeigt staged und unstaged Änderungen
-- `git log --oneline -5` — zeigt die letzten 5 Commits für Stil-Konsistenz
+## Steps
 
-### 2. Dateien stagen
-Stage alle relevanten Dateien **gezielt per Name** (kein `git add -A` oder `git add .`):
-- Starte mit allen geänderten Dateien aus `git status`
-- Falls `Agents.md` im Repository existiert: Stage diese immer mit
-- Vermeide versehentliches Stagen von: `.env`, Credential-Dateien, Binaries, `node_modules/`
+1. **Look** — `git status --short` and `git diff` in parallel. The diff is what the message
+   is derived from.
+2. **Stage** — `git add -u`. This stages modifications and deletions of tracked files and
+   nothing else, so an untracked `.env` or credential file cannot slip in.
+3. **Commit** — `git commit -m "<gitmoji> <message>"`. If the user supplied a message, use it
+   verbatim and only prepend the gitmoji.
+4. **Push** — `git push`, or `git push -u origin <branch>` when the branch has no upstream.
+5. **Report** — commit hash, message, branch.
 
-### 3. Agents.md aktualisieren
-**Nur wenn `Agents.md` im Repository existiert:**
-- Lese `Agents.md` und prüfe, ob Commit-Nachrichten-Regeln, Gitmoji-Usage oder andere relevante Anweisungen den aktuellen Änderungen entsprechen.
-- Falls veraltet: Aktualisiere gezielt die betroffenen Abschnitte.
-- Falls alles aktuell: keine Änderung.
+## Message
 
-### 4. Commit erstellen
-- Wähle einen passenden [Gitmoji](https://gitmoji.carloscuesta.dev/) basierend auf der Änderung:
-  - `🔧` fix — Bugfix
-  - `✨` feat — neues Feature
-  - `📝` docs — Dokumentation
-  - `♻️` refactor — Refactoring
-  - `🧹` chore — Housekeeping, Config
-  - `🔒` security — Security-Änderung
-  - `🚀` ci — CI/CD
-- Füge den Gitmoji **am Anfang** der Commit-Nachricht hinzu
-- Falls `$ARGUMENTS` übergeben: verwende exakt diesen Text (mit Gitmoji vorangestellt)
-- Sonst: leite einen prägnanten Satz aus den Änderungen ab
+English, one sentence. A second sentence is fine when the change is genuinely broad, and
+never more than that. Say what changed and why, not which files.
 
-```
-git commit -m "$(cat <<'EOF'
-🔧 Commit-Nachricht hier.
-EOF
-)"
-```
+| Gitmoji | When |
+|---------|------|
+| `✨` | new feature |
+| `🔧` | bugfix |
+| `📝` | docs |
+| `♻️` | refactor |
+| `🧹` | chore, config |
+| `🔒` | security |
+| `🚀` | CI/CD |
 
-### 5. Push
-- Branch hat noch kein Upstream-Tracking → immer: `git push -u origin <branch-name>`
-- Sonst: `git push`
+## Rules
 
-### 6. Bestätigung
-- Führe `git status` aus
-- Gib eine kurze Zusammenfassung aus: Commit-Hash, Nachricht, gepushter Branch
-
-## Wichtige Regeln
-
-- **Niemals** `.env`, Credential-Dateien oder Secrets committen
-- **Kein** `--no-verify` oder `--force`
-- **Kein** `git add -A` oder `git add .`
-- Bei Pre-Commit-Hook-Fehler: Problem beheben, dann **neuen** Commit erstellen (kein `--amend`)
-- Commit-Nachricht: **maximal 1 Satz**, Imperativ, **Englisch**, mit Gitmoji am Anfang
-- Immer `Agents.md` prüfen und ggf. mitstagen
+- Never `--force`, `--no-verify`, or `--amend`.
+- A rejecting pre-commit hook means fix the cause and make a **new** commit.
+- Nothing to stage after `git add -u` → say so and stop. Do not invent a commit.

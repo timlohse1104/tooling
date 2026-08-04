@@ -6,7 +6,8 @@
 # into ~/.config/opencode/ WITHOUT removing anything already there.
 # Other sources (e.g. the C4 team installer) may have installed their
 # own agents/skills/plugins/scripts alongside these — this script must
-# never wipe them. Files this script would overwrite are backed up first.
+# never wipe them. Files this script does own are overwritten in place;
+# the git history of this repo is the backup.
 # ============================================================
 set -euo pipefail
 
@@ -20,20 +21,9 @@ SKILLS_TARGET_DIR="$TARGET_DIR/skills"
 
 mkdir -p "$TARGET_DIR"
 
-# Back up an existing destination file before it gets overwritten.
-backup_if_exists() {
-    local f="$1"
-    [ -f "$f" ] || return 0
-    local b="${f}.bak.$(date +%Y%m%d_%H%M%S)"
-    cp "$f" "$b"
-    printf "  Backup: %s\n" "$b"
-}
-
-# Copy a single file into place, backing up any existing target first.
 install_file() {
     local src="$1" dst="$2"
     mkdir -p "$(dirname "$dst")"
-    backup_if_exists "$dst"
     cp "$src" "$dst"
     printf "  Installed: %s\n" "$dst"
 }
@@ -63,8 +53,8 @@ if [ -d "$SKILLS_SRC_DIR" ]; then
         name="$(basename "$skill_dir")"
         printf "  Skill: %s\n" "$name"
         # Copy the skill's contents in without removing the target dir, so a
-        # skill of the same name is updated file-by-file (backing up changed
-        # files) rather than wiped-and-replaced.
+        # skill of the same name is updated file-by-file rather than
+        # wiped-and-replaced.
         while IFS= read -r -d '' src; do
             rel="${src#"$skill_dir"}"
             install_file "$src" "$SKILLS_TARGET_DIR/$name/$rel"

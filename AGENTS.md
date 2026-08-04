@@ -12,7 +12,6 @@ No build system, no tests, no CI. All content is documentation and shell scripts
 tooling/
 ├── README.md                        # Curated tool/service link list
 ├── .opencode/skills/                # Project-local skills (OpenCode reads these)
-│   ├── commit-push/                 # Commit+push workflow
 │   └── llama-preset/                # models.ini section generator + recommend.sh
 ├── bashrc-backup/                   # Bash config to deploy to ~
 │   ├── .bashrc                      # PS1 + sources aliases/functions
@@ -22,7 +21,7 @@ tooling/
 ├── opencode-backup/
 │   ├── opencode.jsonc               # OpenCode global config
 │   ├── AGENTS.md                    # Global personal rules -> ~/.config/opencode/AGENTS.md
-│   ├── skills/                      # OpenCode skills (agents/ is also installed if present)
+│   ├── skills/                      # OpenCode skills, incl. commit-push (agents/ too if present)
 │   └── install.sh                   # Copies config + AGENTS.md + skills/ to ~/.config/opencode/
 ├── claude-backup/
 │   ├── .claude/                     # settings.json, mcp.json, commands/, skills/
