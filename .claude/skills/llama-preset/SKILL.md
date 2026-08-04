@@ -39,7 +39,7 @@ Three independent inputs drive every setting:
      — but never `temp = 0` unless the model card explicitly recommends greedy
      decoding; the script refuses a bare `--extra temp=0` without an explicit
      `--zero-temp-ok` confirmation.
-   - **Exception: OCR/document-parsing models** (e.g. `Unlimited-OCR`) keep the
+   - **Exception: OCR/document-parsing models** (section name matches "ocr") keep the
      old conservative defaults (`f16` KV, no parallel/cache-reuse/speculative-
      decoding, no zero-temp guard) — one-shot greedy grounding doesn't benefit
      from (and isn't a creativity trade-off for) agentic throughput tuning.
