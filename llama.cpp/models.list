@@ -10,53 +10,17 @@
 # Downloads land in $LLAMA_MODELS_DIR (OUTSIDE this repo) and are never committed.
 
 # --- Your models -----------------------------------------------------------
-unsloth/Qwen3.6-27B-MTP-GGUF       | Qwen3.6-27B-IQ4_XS.gguf            | Qwen3.6-27B
-unsloth/Qwen3.6-35B-A3B-MTP-GGUF   | Qwen3.6-35B-A3B-UD-IQ4_XS.gguf     | Qwen3.6-35B-A3B
-#unsloth/gemma-4-26B-A4B-it-qat-GGUF | gemma-4-26B-A4B-it-qat-UD-Q4_K_XL.gguf | gemma-4-26B-A4B
-
-# --- Gemma 4 31B (Google/unsloth, Apache-2.0) — dense QAT VLM ---------------
-unsloth/gemma-4-31B-it-qat-GGUF    | gemma-4-31B-it-qat-UD-Q4_K_XL.gguf | gemma-4-31B
-unsloth/gemma-4-31B-it-qat-GGUF    | mtp-gemma-4-31B-it.gguf            | gemma-4-31B
-# Optional vision projector (Text+Image); enable via preset key `mmproj = …`:
-unsloth/gemma-4-31B-it-qat-GGUF  | mmproj-F16.gguf                    | gemma-4-31B
-
-# --- Laguna XS 2.1 (poolside, OpenMDW-1.1) — agentic coding MoE ------------
-# 33B total / 3B active. bartowski's imatrix IQ4_XS (18.2 GB) leaves the most
-# room for KV-cache/compute on a 24 GB card.
-bartowski/Laguna-XS-2.1-GGUF       | Laguna-XS-2.1-IQ4_XS.gguf           | Laguna-XS-2.1
-
-# --- Qwen-AgentWorld (Qwen, Apache-2.0) — language world model -------------
-# unsloth/Qwen-AgentWorld-35B-A3B-GGUF | Qwen-AgentWorld-35B-A3B-UD-IQ4_XS.gguf | Qwen-AgentWorld-35B-A3B
-
-# --- Ornith-1.0 (DeepReinforce, MIT) — agentic coding ----------------------
-# deepreinforce-ai/Ornith-1.0-9B-GGUF  | ornith-1.0-9b-Q8_0.gguf      | Ornith-1.0-9B
-# deepreinforce-ai/Ornith-1.0-35B-GGUF | ornith-1.0-35b-Q4_K_M.gguf   | Ornith-1.0-35B
-
-# --- Unlimited-OCR (Baidu, MIT) — VLM, one-shot long-horizon doc parsing ---
-# sahilchachra/Unlimited-OCR-GGUF    | Unlimited-OCR-Q8_0.gguf            | Unlimited-OCR
-# sahilchachra/Unlimited-OCR-GGUF    | mmproj-Unlimited-OCR-F16.gguf      | Unlimited-OCR
-
-# --- Soofi-S-Instruct-Preview (SOOFI Consortium, closed beta) — non-thinking
-# agentic instruct variant --------------------------------------------------
-# 32B total / 3.5B active MoE (arch nemotron_h_moe, hybrid Mamba-2/MoE: 23
-# Mamba-2/MoE layers + 6 attention layers, 128 experts + 1 shared, 6 active
-# per token). Gated repo (manual approval) — request/accept access on the HF
-# model page with the account matching HF_TOKEN in config.env; a valid token
-# alone is NOT enough (verified: whoami succeeds, resolve still 403 "not in
-# the authorized list").
-# NOTE: despite the model card's size table listing a Q4_K_M (~21 GB) quant,
-# the repo's actual file listing (HF API, checked 2026-07-19) only contains
-# Q5_K_M (24.25 GiB) and Q8_0 (31.28 GiB) — no Q4_K_M has been uploaded yet.
-# Q5_K_M is therefore the smallest quant that ACTUALLY EXISTS, and at
-# 24.25 GiB it is already slightly larger than the 7900 XTX's 24560 MiB
-# (23.98 GiB) total VRAM — weights alone don't fit fully; needs n-cpu-moe to
-# offload some MoE expert layers to CPU (this arch supports it: 3.5B of the
-# 32B total are active per token). Custom architecture — needs a llama.cpp
-# build that understands nemotron_h_moe; verify against the actual
-# checkpoint. Non-thinking by default (no <think> block); use --jinja for
-# the model's native tool-calling format. Vendor sampling (from the model's
-# Ollama Modelfile): temp 0.6, top-p 0.95.
-Soofi-Project/Soofi-S-Instruct-Preview-GGUF | soofi-s-instruct-preview-Q5_K_M.gguf | Soofi-S-Instruct-Preview
+unsloth/Qwen3.6-27B-MTP-GGUF          | Qwen3.6-27B-IQ4_XS.gguf            | Qwen3.6-27B
+unsloth/Qwen3.6-35B-A3B-MTP-GGUF      | Qwen3.6-35B-A3B-UD-IQ4_XS.gguf     | Qwen3.6-35B-A3B
+unsloth/gemma-4-26B-A4B-it-qat-GGUF   | gemma-4-26B-A4B-it-qat-UD-Q4_K_XL.gguf | gemma-4-26B-A4B
+unsloth/gemma-4-31B-it-qat-GGUF       | gemma-4-31B-it-qat-UD-Q4_K_XL.gguf | gemma-4-31B
+unsloth/gemma-4-31B-it-qat-GGUF       | mtp-gemma-4-31B-it.gguf            | gemma-4-31B
+bartowski/Laguna-XS-2.1-GGUF          | Laguna-XS-2.1-IQ4_XS.gguf           | Laguna-XS-2.1
+unsloth/Qwen-AgentWorld-35B-A3B-GGUF  | Qwen-AgentWorld-35B-A3B-UD-IQ4_XS.gguf | Qwen-AgentWorld-35B-A3B
+deepreinforce-ai/Ornith-1.0-9B-GGUF   | ornith-1.0-9b-Q8_0.gguf      | Ornith-1.0-9B
+deepreinforce-ai/Ornith-1.0-35B-GGUF  | ornith-1.0-35b-Q4_K_M.gguf   | Ornith-1.0-35B
+sahilchachra/Unlimited-OCR-GGUF       | Unlimited-OCR-Q8_0.gguf            | Unlimited-OCR
+sahilchachra/Unlimited-OCR-GGUF       | mmproj-Unlimited-OCR-F16.gguf      | Unlimited-OCR
 
 # --- Optional: Qwen fixed chat template (referenced by presets) ------------
 # froggeric/Qwen-Fixed-Chat-Templates | chat_template.jinja | ../templates

@@ -209,9 +209,9 @@ Preset keys are `llama-server` long flags **without** the leading `--` (see
 
 | Situation | Keys to set |
 |-----------|-------------|
-| Single discrete GPU, model fits VRAM | `device = <GPU>`, `n-gpu-layers = 999` |
+| Single discrete GPU, model fits VRAM | `device = <GPU>`, `n-gpu-layers = -1` |
 | Model larger than VRAM (**dense**) | lower `n-gpu-layers` to the largest count that fits (fit-params computes it) |
-| Model larger than VRAM (**MoE**, e.g. A3B/A4B) | keep `n-gpu-layers = 999`, push experts to CPU with `n-cpu-moe = N` (raise N = less VRAM, slower) |
+| Model larger than VRAM (**MoE**, e.g. A3B/A4B) | keep `n-gpu-layers = -1`, push experts to CPU with `n-cpu-moe = N` (raise N = less VRAM, slower) |
 | Discrete + integrated GPU present | pin `device = <discreteGPU>`; do **not** offload to the iGPU |
 | True multi-GPU (2+ discrete) | `tensor-split = a,b` and/or `main-gpu`, `split-mode = layer` |
 | Non-OCR model (**agentic default, K floor**) | `cache-type-k = q8_0` — never lower by default; K (attention keys) is more sensitive to quantization loss than V |
@@ -244,7 +244,7 @@ Three classes of settings:
   without `--zero-temp-ok` (non-OCR only) — see step 3.
 
 Notes:
-- `n-gpu-layers = 999` means "all layers" and is clamped automatically.
+- `n-gpu-layers = -1` means "all layers" and is clamped automatically.
 - `ctx-size` must not exceed the model's `n_ctx_train` (the script caps it). If
   the vendor documents YaRN/RoPE to extend it, that is a deliberate override —
   raise `--ctx` explicitly rather than fighting the cap.

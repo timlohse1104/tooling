@@ -73,6 +73,26 @@
           "name": "Qwen3.6 27B Dense MTP",
           "modalities": {"input": ["text"], "output": ["text"]}
         },
+        "Qwen3.6-35B-A3B": {
+          "name": "Qwen3.6 35B-A3B MoE",
+          "modalities": {"input": ["text"], "output": ["text"]}
+        },
+        "gemma-4-26B-A4B": {
+          "name": "Gemma 4 26B-A4B",
+          "modalities": {"input": ["text", "image"], "output": ["text"]}
+        },
+        "ornith-1.0-9b": {
+          "name": "Ornith 1.0 9B Dense",
+          "modalities": {"input": ["text"], "output": ["text"]}
+        },
+        "ornith-1.0-35b": {
+          "name": "Ornith 1.0 35B MoE",
+          "modalities": {"input": ["text"], "output": ["text"]}
+        },
+        "Qwen-AgentWorld-35B-A3B": {
+          "name": "Qwen-AgentWorld 35B-A3B World Model",
+          "modalities": {"input": ["text"], "output": ["text"]}
+        },
         "gemma-4-31B": {
           "name": "Gemma 4 31B Dense QAT + MTP",
           "modalities": {"input": ["text", "image"], "output": ["text"]}
@@ -82,7 +102,7 @@
           "modalities": {"input": ["text"], "output": ["text"]}
         }
       },
-      "whitelist": ["Qwen3.6-27B", "gemma-4-31B", "Laguna-XS-2.1"]
+      "whitelist": ["Qwen3.6-27B", "Qwen3.6-35B-A3B", "gemma-4-26B-A4B", "ornith-1.0-9b", "ornith-1.0-35b", "Qwen-AgentWorld-35B-A3B", "gemma-4-31B", "Laguna-XS-2.1"]
     },
     "openrouter": {
       "options": {

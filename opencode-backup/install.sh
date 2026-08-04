@@ -17,8 +17,6 @@ AGENTS_SRC_DIR="$SCRIPT_DIR/agents"
 AGENTS_TARGET_DIR="$TARGET_DIR/agents"
 SKILLS_SRC_DIR="$SCRIPT_DIR/skills"
 SKILLS_TARGET_DIR="$TARGET_DIR/skills"
-PLUGIN_SRC_DIR="$SCRIPT_DIR/plugin"
-PLUGIN_TARGET_DIR="$TARGET_DIR/plugin"
 
 mkdir -p "$TARGET_DIR"
 
@@ -42,6 +40,12 @@ install_file() {
 
 printf "Installing personal opencode.jsonc -> %s\n" "$TARGET_FILE"
 install_file "$SCRIPT_DIR/opencode.jsonc" "$TARGET_FILE"
+
+# Global rules, loaded into every opencode session (see opencode.ai/docs/rules).
+if [ -f "$SCRIPT_DIR/AGENTS.md" ]; then
+    printf "Installing global rules -> %s\n" "$TARGET_DIR/AGENTS.md"
+    install_file "$SCRIPT_DIR/AGENTS.md" "$TARGET_DIR/AGENTS.md"
+fi
 
 # Add agent definitions without deleting agents from other sources.
 if [ -d "$AGENTS_SRC_DIR" ] && compgen -G "$AGENTS_SRC_DIR/*.md" > /dev/null; then
@@ -69,26 +73,9 @@ if [ -d "$SKILLS_SRC_DIR" ]; then
     shopt -u nullglob
 fi
 
-# Add plugins (auto-loaded from ~/.config/opencode/plugin/*.js) without
-# deleting plugins from other sources (e.g. the C4 team's prod-guard.js).
-# The command-guard rule file is only installed if the target does not already
-# exist, so local rule customisations survive re-running the installer; the
-# .js is always refreshed (backing up the previous version).
-if [ -d "$PLUGIN_SRC_DIR" ]; then
-    printf "Adding plugins to %s (existing files kept)...\n" "$PLUGIN_TARGET_DIR"
-    shopt -s nullglob
-    for src in "$PLUGIN_SRC_DIR"/*.js; do
-        install_file "$src" "$PLUGIN_TARGET_DIR/$(basename "$src")"
-    done
-    for src in "$PLUGIN_SRC_DIR"/*.rules.json; do
-        dst="$PLUGIN_TARGET_DIR/$(basename "$src")"
-        if [ -f "$dst" ]; then
-            printf "  Kept existing rules (not overwritten): %s\n" "$dst"
-        else
-            install_file "$src" "$dst"
-        fi
-    done
-    shopt -u nullglob
-fi
+# No plugins here on purpose. The bash guard lives in stadtwerk_ai_config
+# (.opencode/plugin/command-guard.js) and is installed by its own
+# install-opencode.sh, which drops it into the same ~/.config/opencode/plugin/.
+# Shipping a second copy from here would run two guards side by side.
 
 printf "Installation complete! opencode configuration updated (add-only).\n"
