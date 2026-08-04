@@ -69,6 +69,8 @@
 #
 # Options:
 #   --device DEV     Force offload device(s), e.g. Vulkan0 (default: best discrete GPU)
+#   --allow-cpu-moe  Allow n-cpu-moe to buy a longer ctx (default: shrink ctx and
+#                    keep every expert on the GPU — generation throughput first)
 #   --ctx N          Force ctx-size (default: let fit choose, capped at n_ctx_train)
 #   --margin MiB     VRAM to leave free per device for compute buffers (default: 1024)
 #   --cache-k TYPE   Override cache-type-k (default: q8_0 floor, or f16 for OCR models)
@@ -98,6 +100,7 @@ ONLY_DEVICES=0
 HF_ONLY=0
 FORCE_OCR=0
 AGENTIC=1
+ALLOW_CPU_MOE=0
 FORCE_CACHE_K=""
 FORCE_CACHE_V=""
 ZERO_TEMP_OK=0
@@ -111,6 +114,7 @@ while [[ $# -gt 0 ]]; do
         --device)   FORCE_DEVICE="${2:?--device needs a value}"; shift 2 ;;
         --ctx)      FORCE_CTX="${2:?--ctx needs a value}"; shift 2 ;;
         --margin)   MARGIN_MIB="${2:?--margin needs a value}"; shift 2 ;;
+        --allow-cpu-moe) ALLOW_CPU_MOE=1; shift ;;
         --cache-k)  FORCE_CACHE_K="${2:?--cache-k needs a value}"; shift 2 ;;
         --cache-v)  FORCE_CACHE_V="${2:?--cache-v needs a value}"; shift 2 ;;
         --ocr)      FORCE_OCR=1; shift ;;
@@ -160,10 +164,45 @@ find_llama_dir() {
 
 LCPP="$(find_llama_dir)"
 
-# source config.env (real) or its .example for LLAMA_MODELS_DIR / LLAMA_PRESET
-if   [[ -f "$LCPP/config.env" ]];         then source "$LCPP/config.env"
-elif [[ -f "$LCPP/config.env.example" ]]; then source "$LCPP/config.env.example"
+# source config.env (real) or its .example for LLAMA_MODELS_DIR / LLAMA_PRESET.
+# Strip CR first: these files are edited on both machines and a CRLF copy makes
+# bash choke on every line ("$'\r': command not found").
+source_cfg() {
+    local f="$1" tmp
+    tmp="$(mktemp)"
+    tr -d '\r' < "$f" > "$tmp"
+    # shellcheck disable=SC1090
+    source "$tmp"
+    rm -f "$tmp"
+}
+# Precedence, strongest first: an exported env var, the real config.env, the
+# host's config.ps1, then config.env.example. The .example must come last — it
+# assigns a Linux path unconditionally and would otherwise clobber both an
+# exported value and the Windows host's real one.
+_ENV_MODELS_DIR="${LLAMA_MODELS_DIR:-}"
+_ENV_PRESET="${LLAMA_PRESET:-}"
+if [[ -f "$LCPP/config.env" ]]; then
+    source_cfg "$LCPP/config.env"
+elif [[ -f "$LCPP/config.ps1" ]]; then
+    _v="$(sed -n 's/^[[:space:]]*\$LLAMA_MODELS_DIR[[:space:]]*=[[:space:]]*"\(.*\)".*/\1/p' "$LCPP/config.ps1" | tr -d '\r' | head -n1)"
+    if [[ "$_v" == *'$env:LOCALAPPDATA'* ]] && command -v cmd.exe >/dev/null 2>&1; then
+        _lad="$(cd / && cmd.exe /c 'echo %LOCALAPPDATA%' 2>/dev/null | tr -d '\r\n')"
+        [[ -n "$_lad" ]] && _v="${_v//'$env:LOCALAPPDATA'/$_lad}"
+    fi
+    _v="${_v//\\//}"
+    [[ "$_v" =~ ^([A-Za-z]):/(.*)$ ]] && _v="/mnt/${BASH_REMATCH[1],,}/${BASH_REMATCH[2]}"
+    if [[ -n "$_v" && "$_v" != *'$env:'* ]]; then
+        LLAMA_MODELS_DIR="$_v"
+    else
+        note "found config.ps1 but could not resolve LLAMA_MODELS_DIR from it — export LLAMA_MODELS_DIR or create config.env"
+    fi
+    unset _v _lad
+elif [[ -f "$LCPP/config.env.example" ]]; then
+    source_cfg "$LCPP/config.env.example"
 fi
+[[ -n "$_ENV_MODELS_DIR" ]] && LLAMA_MODELS_DIR="$_ENV_MODELS_DIR"
+[[ -n "$_ENV_PRESET" ]]     && LLAMA_PRESET="$_ENV_PRESET"
+unset _ENV_MODELS_DIR _ENV_PRESET
 LLAMA_MODELS_DIR="${LLAMA_MODELS_DIR:-$HOME/.local/share/llama.cpp/models}"
 LLAMA_PRESET="${LLAMA_PRESET:-presets/models.ini}"
 PRESET_FILE="$LCPP/$LLAMA_PRESET"
@@ -196,14 +235,38 @@ hf_candidates() {
 # locate llama-server / llama-fit-params and wire up shared libs
 # --------------------------------------------------------------------------- #
 resolve_bin() {
-    local name="$1"
-    # -L: follow symlinks (vendor/ or its parents may be a symlink)
-    find -L "$LCPP/vendor" -name "$name" -type f 2>/dev/null | head -n1
+    local name="$1" hit
+    # -L: follow symlinks (vendor/ or its parents may be a symlink).
+    # Prefer the extensionless Linux binary; fall back to the Windows .exe so
+    # this works on the WSL/Windows host too, where vendor/ holds *.exe only.
+    hit="$(find -L "$LCPP/vendor" -name "$name" -type f 2>/dev/null | head -n1)"
+    [[ -z "$hit" ]] && hit="$(find -L "$LCPP/vendor" -name "$name.exe" -type f 2>/dev/null | head -n1)"
+    printf '%s' "$hit"
 }
 SERVER_BIN="$(resolve_bin llama-server)"
 FIT_BIN="$(resolve_bin llama-fit-params)"
 [[ -n "$SERVER_BIN" ]] || err "llama-server not found under $LCPP/vendor. Run ./bootstrap.sh first."
 export LD_LIBRARY_PATH="$(dirname "$SERVER_BIN"):${LD_LIBRARY_PATH:-}"
+
+# If the resolved binaries are Windows .exe (WSL host), they cannot open a
+# /mnt/c/... path and fail SILENTLY: llama-fit-params prints its header and no
+# data line, which reads exactly like "the model does not fit" and produced a
+# 4096 ctx for a model that measurably does 163840. Convert paths for both the
+# probes and the emitted preset — llama-server on that host is the same .exe,
+# so the preset needs the native form too.
+IS_WIN_BIN=0
+[[ "$SERVER_BIN" == *.exe ]] && IS_WIN_BIN=1
+to_native_path() {
+    local p="$1"
+    [[ "$IS_WIN_BIN" == 1 ]] || { printf '%s' "$p"; return; }
+    if command -v wslpath >/dev/null 2>&1 && wslpath -m "$p" >/dev/null 2>&1; then
+        wslpath -m "$p"
+    elif [[ "$p" =~ ^/mnt/([a-zA-Z])/(.*)$ ]]; then
+        printf '%s:/%s' "${BASH_REMATCH[1]^^}" "${BASH_REMATCH[2]}"
+    else
+        printf '%s' "$p"
+    fi
+}
 
 # --------------------------------------------------------------------------- #
 # feature detection: probe the INSTALLED llama-server's --help/--version so
@@ -226,6 +289,17 @@ CACHE_TYPES_ALLOWED="$(awk '/--cache-type-k TYPE/{getline; print}' <<< "$HELP_TE
 cache_type_supported() {
     [[ -z "$CACHE_TYPES_ALLOWED" ]] && return 0   # unknown help format -> assume supported
     local list=" ${CACHE_TYPES_ALLOWED//,/ } "
+    [[ "$list" == *" $1 "* ]]
+}
+
+# Speculative-decoding implementations THIS build offers, parsed from the
+# comma-separated list --help prints right after the --spec-type flag. The set
+# grows with llama.cpp releases, so never hardcode it: probe, then pick from
+# what is actually there.
+SPEC_TYPES_ALLOWED="$(sed -n 's/^--spec-type[[:space:]]\{1,\}\([a-z0-9,._-]\{1,\}\).*/\1/p' <<< "$HELP_TEXT" | head -n1)"
+spec_type_supported() {
+    [[ -z "$SPEC_TYPES_ALLOWED" ]] && return 1    # unknown -> do not guess
+    local list=" ${SPEC_TYPES_ALLOWED//,/ } "
     [[ "$list" == *" $1 "* ]]
 }
 
@@ -312,7 +386,12 @@ resolve_model_path() {
 }
 
 MODEL_PATH="$(resolve_model_path "$MODEL_INPUT")"
-SECTION="$(basename "$MODEL_PATH")"
+# Section name = the bare model alias clients pass in the OpenAI "model" field,
+# which is the directory the GGUF lives in (e.g. .../Laguna-XS-2.1/x.gguf ->
+# [Laguna-XS-2.1]). This matches what models.ini actually uses; the GGUF
+# filename would create a second, duplicate section for models already there.
+SECTION="$(basename "$(dirname "$MODEL_PATH")")"
+[[ -z "$SECTION" || "$SECTION" == "." || "$SECTION" == "models" ]] && SECTION="$(basename "$MODEL_PATH" .gguf)"
 MODEL_BYTES="$(stat -c '%s' "$MODEL_PATH" 2>/dev/null || echo 0)"
 MODEL_MIB=$(( MODEL_BYTES / 1024 / 1024 ))
 
@@ -342,7 +421,12 @@ declare -A OLD_KV=()
 load_existing_section() {
     [[ -f "$PRESET_FILE" ]] || return 0
     local insec=0 line key val
+    # Strip CR: models.ini is edited on the Windows host too, and a CRLF copy
+    # made "[$SECTION]" never match — the script then reported "new entry" for
+    # an existing section, skipping the OPTIMIZATION DIFF and letting --write
+    # append a duplicate.
     while IFS= read -r line || [[ -n "$line" ]]; do
+        line="${line%$'\r'}"
         if [[ "$line" == "[$SECTION]" ]]; then insec=1; continue; fi
         if [[ $insec == 1 && "$line" =~ ^\[ ]]; then break; fi
         if [[ $insec == 1 && "$line" =~ ^([A-Za-z0-9_-]+)[[:space:]]*=[[:space:]]*(.*)$ ]]; then
@@ -371,21 +455,52 @@ shopt -u nocasematch
 [[ "$FORCE_OCR" == 1 ]] && IS_OCR=1
 
 # --------------------------------------------------------------------------- #
-# agentic speculative-decoding auto-wiring: lossless MTP speeds up generation
-# for free (the target model verifies every drafted token) whenever the model
-# actually has an MTP head available. Two shapes seen in this repo:
-#   1) self-speculative: the HF repo itself is an "-MTP-" build (Qwen3.6) —
-#      no separate drafter file, just spec-type=draft-mtp.
-#   2) separate drafter: a tiny sibling mtp-*.gguf next to the model
-#      (gemma-4-31B) — needs model-draft pointed at that file too.
-# Skipped for OCR models, with --no-agentic, or if this build lacks --spec-type
-# (newest-feature gate: only use it if the installed llama-server supports it).
+# device + backend. Resolved before the KV-cache block because the correct
+# cache-type pair depends on the backend, not just on quantization sensitivity.
 # --------------------------------------------------------------------------- #
-SPEC_TYPE=""; SPEC_DRAFT=""; SPEC_SRC=""
+DEVICE="$(choose_device || true)"
+if [[ -z "$DEVICE" ]]; then
+    note "WARNING: no usable GPU detected — emitting a CPU-only preset."
+fi
+
+# Backend from the device id that --list-devices reported (CUDA0 / Vulkan0 / ...).
+# Never hardcode which backend this repo uses; both machines exist.
+BACKEND="cpu"
+case "$DEVICE" in
+    CUDA*|Cuda*|cuda*)     BACKEND="cuda" ;;
+    Vulkan*|vulkan*)       BACKEND="vulkan" ;;
+    ROCm*|HIP*|hip*)       BACKEND="rocm" ;;
+    SYCL*|Metal*|metal*)   BACKEND="other" ;;
+esac
+
+# --------------------------------------------------------------------------- #
+# agentic speculative-decoding auto-wiring. Speculative decoding is LOSSLESS —
+# the target model verifies every drafted token — so a bad fit costs speed and
+# never output quality. That asymmetry is why this is enabled aggressively.
+#
+# Which implementations exist is read from THIS build's --spec-type list, never
+# hardcoded: the set grows with llama.cpp releases and this repo's server is
+# kept current, so a new release should unlock a better default on the next run
+# without editing this script.
+#
+# Two independent sources of drafts, and they chain:
+#   * draft-model based (draft-mtp here) — needs an MTP head, either embedded
+#     in an "-MTP-" HF build (Qwen3.6) or as a sibling mtp-*.gguf (gemma-4-31B,
+#     needs model-draft pointed at it).
+#   * draft-model free (ngram-mod) — needs nothing at all: a hash table in host
+#     RAM, no VRAM, no extra weights. Applies to EVERY model, so it is added
+#     whenever the build offers it.
+# Priority is hardcoded inside llama.cpp (common/speculative.cpp), not by list
+# order: every ngram-* runs before every draft-*, and the first implementation
+# that produces a draft wins for that step.
+#
+# Skipped for OCR models, with --no-agentic, or if this build lacks --spec-type.
+# --------------------------------------------------------------------------- #
+SPEC_TYPE=""; SPEC_DRAFT=""; SPEC_SRC=""; SPEC_NGRAM=0
 DRAFT_OVERHEAD_MIB=0
 if [[ "$IS_OCR" == 0 && "$AGENTIC" == 1 ]]; then
     if ! supports_flag "spec-type"; then
-        note "installed llama-server ($SERVER_VERSION) does not support --spec-type; skipping MTP speculative decoding (upgrade llama.cpp to unlock it)"
+        note "installed llama-server ($SERVER_VERSION) does not support --spec-type; skipping speculative decoding (upgrade llama.cpp to unlock it)"
     elif [[ -n "$HC_MATCH_REPO" && "$HC_MATCH_REPO" =~ [Mm][Tt][Pp] ]]; then
         SPEC_TYPE="draft-mtp"
         SPEC_SRC="HF repo ($HC_MATCH_REPO) is an MTP build — embedded self-speculative head, no separate drafter file needed"
@@ -406,31 +521,98 @@ if [[ "$IS_OCR" == 0 && "$AGENTIC" == 1 ]]; then
             DRAFT_OVERHEAD_MIB=$(( DRAFTER_BYTES / 1024 / 1024 ))
         fi
     fi
+
+    # Draft-model-free speculator: costs no VRAM and no weights, so it is
+    # additive to whatever the MTP detection above found. Chain it in if this
+    # build knows it; if the target model has no MTP head this is the only
+    # speculator it can use at all.
+    if supports_flag "spec-type" && spec_type_supported "ngram-mod"; then
+        SPEC_NGRAM=1
+        if [[ -n "$SPEC_TYPE" ]]; then
+            SPEC_TYPE="${SPEC_TYPE},ngram-mod"
+            SPEC_SRC="${SPEC_SRC}; chained with ngram-mod (no draft model, no VRAM — 16 MiB host-RAM hash table). Speed effect UNMEASURED, adopted on mechanism: lossless, so a bad fit costs speed only"
+        else
+            SPEC_TYPE="ngram-mod"
+            SPEC_SRC="no MTP head found, but this build offers ngram-mod, which needs no draft model at all (16 MiB host RAM, no VRAM). Speed effect UNMEASURED, adopted on mechanism: lossless, so a bad fit costs speed only"
+        fi
+    elif [[ -n "$SPEC_TYPES_ALLOWED" ]]; then
+        note "this build's --spec-type list does not offer 'ngram-mod' (offered: $SPEC_TYPES_ALLOWED); no draft-model-free speculator wired"
+    fi
+fi
+
+# --------------------------------------------------------------------------- #
+# embedded chat-template inspection.
+#
+# Behavioural defaults live in the GGUF's own Jinja template, not on the model
+# card, and the two can disagree: Laguna-XS-2.1's card presents interleaved
+# reasoning as the model's headline feature while its embedded template opens
+# with `enable_thinking | default(false)`. A preset that trusts the card runs
+# that model with thinking off and nothing reports it.
+#
+# The template sits in the GGUF metadata but AFTER the tensor-name table, which
+# for a 40-layer MoE puts it past the 100 MB mark — a short `strings` window
+# finds nothing and would produce a false "not present" answer. Scan wide, and
+# verify the template was actually seen before drawing any conclusion.
+# --------------------------------------------------------------------------- #
+TEMPLATE_SCAN_MIB=200
+TPL="$(head -c $((TEMPLATE_SCAN_MIB * 1024 * 1024)) "$MODEL_PATH" 2>/dev/null | strings -n 6 || true)"
+if ! grep -q 'add_generation_prompt\|{%-' <<< "$TPL"; then
+    note "chat template NOT found within the first ${TEMPLATE_SCAN_MIB} MiB of the GGUF — template-derived findings below are unavailable, not negative. Re-check by hand before assuming a default."
+else
+    if grep -q 'enable_thinking[[:space:]]*|[[:space:]]*default(false)' <<< "$TPL"; then
+        note "embedded template sets 'enable_thinking | default(false)': THINKING IS OFF unless switched on. For an agentic model set 'reasoning = on' explicitly rather than trusting --reasoning auto. Fallback if that does not take: chat-template-kwargs = {\"enable_thinking\": true}"
+    elif grep -q 'enable_thinking[[:space:]]*|[[:space:]]*default(true)' <<< "$TPL"; then
+        note "embedded template defaults enable_thinking to true — no reasoning switch needed"
+    fi
+    if grep -q 'reasoning_content' <<< "$TPL"; then
+        note "embedded template consumes 'reasoning_content' from history — the model expects preserved thinking; a client that drops thinking blocks will degrade it across turns"
+    fi
 fi
 
 # --------------------------------------------------------------------------- #
 # agentic KV-cache / concurrency / reasoning defaults (skipped for OCR, or
-# with --no-agentic). Floors reflect asymmetric quantization sensitivity: K
-# (attention keys) degrades faster under quantization than V (values,
-# especially with flash-attn), so K never goes below q8_0 by default while V
-# can go as low as q4_0 — both are validated against what THIS build's
-# --cache-type-k/-v actually lists as supported (newest-feature gate), with a
-# graceful fallback + note if the installed llama-server is older/narrower.
+# with --no-agentic).
+#
+# K never goes below q8_0: attention keys degrade faster under quantization
+# than values. What V may be depends on the BACKEND, not on quantization
+# sensitivity alone:
+#
+#   cuda    -> V MUST equal K. A mixed pair falls off the fused FlashAttention
+#              kernel. Measured 2026-08-04 on an RTX 4090 with gemma-4-31B
+#              @ ctx 65536 + MTP: q8_0/q8_0 = 2391 t/s prompt / 86 t/s gen,
+#              q8_0/q4_0 = 32 t/s / 9 t/s. Saving KV memory is not worth a
+#              9x throughput loss.
+#   vulkan  -> V may drop to q4_0 (frees the most KV memory of any single
+#              setting). The mixed-pair collapse above is UNTESTED here.
+#   other   -> treated like cuda: match the pair. Safer to lose KV memory than
+#              to risk an unmeasured kernel fallback.
+#
+# Both values are validated against what THIS build's --cache-type-k/-v lists
+# as supported, with a graceful fallback + note on older/narrower builds.
 # --------------------------------------------------------------------------- #
 CACHE_K="f16"; CACHE_V="f16"
 CACHE_SRC="default f16 (max precision; OCR/no-agentic keep this conservative choice)"
 PARALLEL_VAL=""; CACHE_REUSE_VAL=""; REASONING_VAL=""
 if [[ "$IS_OCR" == 0 && "$AGENTIC" == 1 ]]; then
-    CACHE_K="q8_0"; CACHE_V="q4_0"
+    CACHE_K="q8_0"
     if ! cache_type_supported "$CACHE_K"; then
         note "installed llama-server does not list 'q8_0' as a supported cache-type-k (allowed: ${CACHE_TYPES_ALLOWED:-unknown}); falling back to f16"
         CACHE_K="f16"
     fi
-    if ! cache_type_supported "$CACHE_V"; then
-        note "installed llama-server does not list 'q4_0' as a supported cache-type-v (allowed: ${CACHE_TYPES_ALLOWED:-unknown}); falling back to q8_0"
-        CACHE_V="q8_0"
-    fi
-    CACHE_SRC="agentic default: cache-type-k=q8_0 is the floor for K (attention keys are more sensitive to quantization loss), cache-type-v=q4_0 is the floor for V (values tolerate more aggressive quantization, especially with flash-attn) — frees the most KV memory for long agentic context at near-lossless quality"
+    case "$BACKEND" in
+        vulkan)
+            CACHE_V="q4_0"
+            if ! cache_type_supported "$CACHE_V"; then
+                note "installed llama-server does not list 'q4_0' as a supported cache-type-v (allowed: ${CACHE_TYPES_ALLOWED:-unknown}); falling back to $CACHE_K"
+                CACHE_V="$CACHE_K"
+            fi
+            CACHE_SRC="agentic default (vulkan): k=q8_0 floor (keys are quantization-sensitive), v=q4_0 floor (values tolerate more, frees the most KV memory)"
+            ;;
+        *)
+            CACHE_V="$CACHE_K"
+            CACHE_SRC="agentic default ($BACKEND): k=q8_0 floor, v matched to k — a mixed pair falls off the fused FlashAttention kernel (measured 9x generation loss on CUDA), so KV memory is spent rather than throughput"
+            ;;
+    esac
     PARALLEL_VAL=1
     if supports_flag "cache-reuse"; then
         CACHE_REUSE_VAL=256
@@ -457,11 +639,11 @@ if [[ -n "$FORCE_CACHE_V" ]]; then
     fi
     CACHE_V="$FORCE_CACHE_V"; CACHE_SRC="forced via --cache-k/--cache-v"
 fi
-
-DEVICE="$(choose_device || true)"
-if [[ -z "$DEVICE" ]]; then
-    note "WARNING: no usable GPU detected — emitting a CPU-only preset."
+if [[ "$CACHE_K" != "$CACHE_V" && "$BACKEND" != "vulkan" && "$IS_OCR" == 0 && "$AGENTIC" == 1 ]]; then
+    note "WARNING: cache-type-k=$CACHE_K != cache-type-v=$CACHE_V on backend '$BACKEND'. A mixed pair fell off the fused FlashAttention kernel on CUDA (measured 86 -> 9 t/s generation). Verify throughput after loading, or match the pair."
 fi
+
+true   # DEVICE is resolved earlier (the KV-cache rule depends on the backend)
 DEV_TOTAL=0
 [[ -n "$DEVICE" ]] && DEV_TOTAL="$(device_total_mib "$DEVICE")"
 
@@ -489,7 +671,7 @@ N_EXPERT=""
 # MoE expert count aren't in the plain --fit-print table, only in -v output.
 probe_model_meta() {
     [[ -n "$FIT_BIN" ]] || return 0
-    local -a args=(-m "$MODEL_PATH" --fit on -v)
+    local -a args=(-m "$(to_native_path "$MODEL_PATH")" --fit on -v)
     [[ -n "$DEVICE" ]] && args+=(--device "$DEVICE")
     local tmo=""; command -v timeout >/dev/null 2>&1 && tmo="timeout 60"
     local log; log="$($tmo "$FIT_BIN" "${args[@]}" 2>&1 || true)"
@@ -507,7 +689,7 @@ probe_fit() {
     local ctx="$1" ncmoe="$2"
     P_MODEL=""; P_CTX=""; P_COMPUTE=""; P_HOST_MODEL=""
     [[ -n "$FIT_BIN" && -n "$DEVICE" ]] || return 0
-    local -a args=(-m "$MODEL_PATH" --fit on --fit-print on --fit-ctx 4096
+    local -a args=(-m "$(to_native_path "$MODEL_PATH")" --fit on --fit-print on --fit-ctx 4096
                    --device "$DEVICE" --fit-target "$MARGIN_MIB"
                    -ctk "$CACHE_K" -ctv "$CACHE_V")
     [[ "$ctx" -gt 0 ]] && args+=(-c "$ctx")
@@ -565,9 +747,16 @@ else
         CTX_VAL="$TARGET_CTX"
         CTX_SRC="llama-fit-params (native n_ctx_train, verified it fits)"
         [[ "$CTX_IS_FORCED" == 1 ]] && CTX_SRC="forced via --ctx, verified it fits"
-    elif [[ "$IS_MOE" == 1 && -n "$N_LAYER" ]]; then
+    elif [[ "$IS_MOE" == 1 && -n "$N_LAYER" && "$ALLOW_CPU_MOE" == 1 ]]; then
         # binary search the smallest n-cpu-moe (of N_LAYER total layers) that
         # makes ctx=TARGET_CTX fit, by re-probing at each candidate.
+        #
+        # Opt-in only (--allow-cpu-moe). Buying context with n-cpu-moe moves
+        # expert weights to host RAM and every token then waits on the PCIe
+        # round trip, which is the opposite of what an agentic preset wants:
+        # long multi-turn sessions are dominated by generation throughput, and
+        # a shorter fully-resident context beats a longer half-offloaded one.
+        # Default behaviour is therefore to shrink ctx-size instead (below).
         bs_lo=1; bs_hi="$N_LAYER"
         while [[ "$bs_lo" -le "$bs_hi" ]]; do
             bs_mid=$(( (bs_lo + bs_hi) / 2 ))
@@ -646,12 +835,12 @@ fi
 build_block() {
     printf '[%s]\n' "$SECTION"
     printf 'alias = %s\n' "$SECTION"
-    printf 'model = %s\n' "$MODEL_PATH"
+    printf 'model = %s\n' "$(to_native_path "$MODEL_PATH")"
     [[ -n "$DEVICE" ]] && printf 'device = %s\n' "$DEVICE"
     printf 'ctx-size = %s            # %s\n' "$CTX_VAL" "$CTX_SRC"
-    printf 'n-gpu-layers = %s        # %s\n' "$NGL_VAL" "$NGL_SRC"
+    printf 'n-gpu-layers = %s        # %s\n' "$([[ "$NGL_VAL" == 999 ]] && echo -1 || echo "$NGL_VAL")" "$NGL_SRC"
     [[ -n "$NCMOE_VAL" ]] && printf 'n-cpu-moe = %s           # %s\n' "$NCMOE_VAL" "$NCMOE_SRC"
-    printf 'flash-attn = auto\n'
+    printf 'flash-attn = on\n'
     printf 'cache-type-k = %s        # %s\n' "$CACHE_K" "$CACHE_SRC"
     printf 'cache-type-v = %s        # %s\n' "$CACHE_V" "$CACHE_SRC"
     printf 'jinja = true\n'
@@ -665,9 +854,19 @@ build_block() {
         printf 'reasoning-format = %s    # newest-feature default: guarantees reasoning_content/tool_call separation on this llama-server build, regardless of its own default\n' "$REASONING_VAL"
     fi
     if [[ -n "$SPEC_TYPE" ]]; then
-        [[ -n "$SPEC_DRAFT" ]] && printf 'model-draft = %s\n' "$SPEC_DRAFT"
+        [[ -n "$SPEC_DRAFT" ]] && printf 'model-draft = %s\n' "$(to_native_path "$SPEC_DRAFT")"
         printf 'spec-type = %s           # %s\n' "$SPEC_TYPE" "$SPEC_SRC"
-        printf 'spec-draft-n-max = 4     # lossless MTP speculative decoding speedup; lower if the drafter'"'"'s acceptance rate is poor\n'
+        if [[ "$SPEC_TYPE" == *draft-* ]]; then
+            printf 'spec-draft-n-max = 4     # lossless speculative decoding; lower if the drafter'"'"'s acceptance rate is poor\n'
+        fi
+        if [[ "$SPEC_NGRAM" == 1 ]]; then
+            # These equal the build's own defaults; emitted so the values are
+            # visible in the preset and so re-running produces no phantom diff
+            # against the sections that already spell them out.
+            printf 'spec-ngram-mod-n-match = 24\n'
+            printf 'spec-ngram-mod-n-min = 48\n'
+            printf 'spec-ngram-mod-n-max = 64\n'
+        fi
     fi
     # vendor / model-card extras: only keys NOT owned by the hardware tuning above
     if [[ ${#EXTRA_KV[@]} -gt 0 ]]; then
@@ -698,6 +897,30 @@ build_block() {
 }
 BLOCK="$(build_block)"
 
+# Keys the existing section has that the new block does not set. They are
+# vendor/manual settings the script has no opinion about — model-card sampling,
+# `reasoning`, `cache-ram`. Deleting them on --write would silently undo tuning
+# that was done deliberately, so they are carried over verbatim and reported.
+CARRY_KEYS=()
+compute_carry() {
+    local line seen=" " k
+    while IFS= read -r line; do
+        [[ "$line" =~ ^([A-Za-z0-9_-]+)[[:space:]]*= ]] && seen+="${BASH_REMATCH[1]} "
+    done <<< "$BLOCK"
+    for k in "${!OLD_KV[@]}"; do
+        [[ "$seen" == *" $k "* ]] && continue
+        CARRY_KEYS+=("$k")
+    done
+}
+compute_carry
+FINAL_BLOCK="$BLOCK"
+if [[ ${#CARRY_KEYS[@]} -gt 0 ]]; then
+    for _k in "${CARRY_KEYS[@]}"; do
+        FINAL_BLOCK+=$'\n'"$_k = ${OLD_KV[$_k]}"
+    done
+    unset _k
+fi
+
 # --------------------------------------------------------------------------- #
 # optimization diff vs the existing [SECTION] (if any) — makes re-tuning an
 # already-configured model transparent instead of silently overwriting it.
@@ -723,9 +946,8 @@ print_optimization_diff() {
         fi
     done <<< "$BLOCK"
     local k
-    for k in "${!OLD_KV[@]}"; do
-        [[ "$seen" == *" $k "* ]] && continue
-        note "  - $k = ${OLD_KV[$k]}   (no longer set — dropped or superseded)"
+    for k in "${CARRY_KEYS[@]}"; do
+        note "  = $k = ${OLD_KV[$k]}   (kept — not managed by this script)"
     done
     note "======================================================"
 }
@@ -803,17 +1025,25 @@ merge_into_preset() {
         return
     fi
     local tmp; tmp="$(mktemp)"
-    # drop an existing [SECTION] block (header until next [header] or EOF), keep the rest
-    awk -v sec="[$SECTION]" '
-        $0==sec {skip=1; next}
-        skip && /^\[/ {skip=0}
-        !skip {print}
+    # Replace the section IN PLACE. Three things this must not do:
+    #   * match with a bare $0==sec — a CRLF file never matches, the old block
+    #     survives and a duplicate section gets appended.
+    #   * move the section to the end of the file — section order in models.ini
+    #     is maintained by hand and must be preserved.
+    #   * drop keys this script does not manage (sampling, reasoning, cache-ram);
+    #     those are carried over, see compute_carry.
+    awk -v sec="[$SECTION]" -v repl="$FINAL_BLOCK" '
+        { line=$0; sub(/\r$/,"",line) }
+        line==sec && !done { print repl; skip=1; done=1; next }
+        skip && line ~ /^\[/ { skip=0 }
+        !skip { print }
+        END { if (!done) printf "\n%s\n", repl }
     ' "$PRESET_FILE" > "$tmp"
-    # trim trailing blank lines, then append the fresh block
-    sed -e :a -e '/^\n*$/{$d;N;ba}' "$tmp" > "$tmp.2" 2>/dev/null || cp "$tmp" "$tmp.2"
-    printf '\n%s\n' "$BLOCK" >> "$tmp.2"
-    mv "$tmp.2" "$PRESET_FILE"; rm -f "$tmp"
-    note "Updated [$SECTION] in $PRESET_FILE."
+    mv "$tmp" "$PRESET_FILE"
+    note "Updated [$SECTION] in $PRESET_FILE (in place; section order preserved)."
+    if [[ ${#CARRY_KEYS[@]} -gt 0 ]]; then
+        note "carried over ${#CARRY_KEYS[@]} key(s) this script does not manage: ${CARRY_KEYS[*]}"
+    fi
 }
 
 if [[ "$DO_WRITE" == 1 ]]; then

@@ -1,6 +1,6 @@
 ---
 name: llama-preset
-description: Erzeugt bzw. aktualisiert für ein in models.list/auf dem System vorhandenes Modell den passenden [section]-Eintrag in llama.cpp/presets/models.ini — abgestimmt auf die real verbaute Hardware (GPU/VRAM via Vulkan, CPU-Kerne, RAM) UND auf beste Qualität/Geschwindigkeit für agentische Nutzung (Tool-Calling, Multi-Turn, lange Kontexte): cache-type-k=q8_0 (Floor), cache-type-v=q4_0 (Floor), parallel=1, cache-reuse, reasoning-format, automatisches lossless MTP-Speculative-Decoding — jeweils nur wenn die installierte llama-server-Version das Feature unterstützt (immer die neuesten verfügbaren Features nutzen, nie hart codieren). Niedrigere Sampling-Temperaturen werden für Determinismus bevorzugt, temp=0 aber nur wenn der Modell-Ersteller es explizit empfiehlt. Ausnahme: OCR/Dokumenten-Modelle behalten die konservativen Defaults. Optimiert auch bereits bestehende Sections (zeigt einen Diff). Triggert bei Anfragen wie "models.ini erstellen/anpassen", "llama.cpp Modell konfigurieren", "Preset für <Modell> generieren/optimieren", "n-gpu-layers / n-cpu-moe / ctx-size für mein System bestimmen", "Modell an meine GPU anpassen", "bestehendes Preset optimieren". Nutzt `llama-server --list-devices`, `llama-server --help` (Feature-Detection) und `llama-fit-params` zum Autosizing. Use ONLY for the llama.cpp tooling in this repo, not for editing opencode/Claude config.
+description: Erzeugt oder optimiert einen [section]-Eintrag in llama.cpp/presets/models.ini für ein lokal vorhandenes GGUF, abgestimmt auf agentische Nutzung. Misst statt zu schätzen (llama-server --list-devices, llama-fit-params an mehreren ctx-Punkten), leitet alle Feature-Entscheidungen aus dem --help des installierten Builds ab statt aus einer festen Liste, wählt das KV-Cache-Paar backendabhängig, prüft das im GGUF eingebettete Chat-Template auf Verhaltens-Defaults und übernimmt Sampling nur als vollständiges Set aus der Modellkarte. Zeigt einen OPTIMIZATION DIFF gegen eine bestehende Section und erhält dabei Schlüssel, die sie nicht verwaltet. Triggert bei "models.ini erstellen/anpassen", "llama.cpp Modell konfigurieren", "Preset für <Modell> generieren/optimieren", "ctx-size / n-gpu-layers / n-cpu-moe für mein System bestimmen", "Modell an meine GPU anpassen", "bestehendes Preset optimieren". Nur für das llama.cpp-Tooling in diesem Repo, nicht für opencode- oder Claude-Config.
 ---
 
 # llama-preset — hardware- and agentic-tuned `models.ini` sections
@@ -12,10 +12,19 @@ actually supports**, and write them as a `[section]` in
 or already exists — re-running on an existing model re-tunes it and reports
 what changed (see step 4/5).
 
-Three independent inputs drive every setting:
+**The governing rule: measure, don't reason.** Every number in a preset should
+come from a tool that reported it, on this machine, in this build. Where a
+measurement contradicts a rule below, the measurement wins and the rule gets
+rewritten — that is how the backend-dependent KV rule and the ctx policy below
+came to exist. Where something could not be measured, say so in the summary
+instead of presenting a guess as a fact.
+
+Four independent inputs drive every setting:
 
 1. **Hardware fit** — derived from what is actually installed:
-   - GPU(s), total/free VRAM and driver, via `llama-server --list-devices` (Vulkan).
+   - GPU(s), total/free VRAM and driver, via `llama-server --list-devices`
+     (reports CUDA and Vulkan devices alike; the backend follows from the
+     device id and changes the KV-cache decision, see below).
    - Autosized `n-gpu-layers` / `n-cpu-moe` / `ctx-size`, via `llama-fit-params`
      (the same `--fit` engine `llama-server` uses), with a transparent file-size
      heuristic as fallback.
@@ -29,30 +38,64 @@ Three independent inputs drive every setting:
    long-context agent workloads:
    - `cache-type-k = q8_0` — the **floor** for K (never lower by default;
      attention keys are more sensitive to quantization loss).
-   - `cache-type-v = q4_0` — the **floor** for V (values tolerate more
-     aggressive quantization, especially with flash-attn; frees the most KV
-     memory of any of these settings).
-   - `parallel = 1`, `cache-reuse`, `reasoning-format = auto` (when supported),
-     and auto-wired lossless MTP speculative decoding when the model has one.
-   - Sampling **temperature** prefers the lower/more deterministic end of what
-     the model card offers (agentic work is less creative, more deterministic)
-     — but never `temp = 0` unless the model card explicitly recommends greedy
-     decoding; the script refuses a bare `--extra temp=0` without an explicit
-     `--zero-temp-ok` confirmation.
+   - `cache-type-v` — **depends on the backend, not on quantization sensitivity
+     alone.** On CUDA it must equal K: a mixed pair falls off the fused
+     FlashAttention kernel. Measured 2026-08-04 on an RTX 4090 with
+     gemma-4-31B @ ctx 65536 + MTP — `q8_0`/`q8_0` gave 2391 t/s prompt and
+     86 t/s generation, `q8_0`/`q4_0` gave 32 and 9. A 9× throughput loss is
+     never worth the KV memory. On Vulkan `q4_0` remains the V floor and frees
+     the most KV memory of any single setting; the collapse above is **untested
+     there**, so do not generalise it in either direction.
+   - `parallel = 1`, `cache-reuse`, `reasoning-format = auto` (when supported).
+   - Speculative decoding is **lossless** — the target verifies every drafted
+     token — so a bad fit costs speed and never output quality. Wire whatever
+     the build offers: `draft-mtp` when the model has an MTP head, plus
+     `ngram-mod`, which needs no draft model and no VRAM and therefore applies
+     to every model. Priority is hardcoded in llama.cpp, not by list order.
+   - **Context beats nothing, but throughput beats context.** Do not buy a
+     longer `ctx-size` with `n-cpu-moe`: offloaded experts put a PCIe round
+     trip in the generation path, and long agent sessions are dominated by
+     generation. Shrink `ctx-size` until it fits fully on the GPU instead
+     (`--allow-cpu-moe` opts into the other trade if you really want it).
+   - Sampling: model cards publish **whole sets** (thinking/general,
+     thinking/coding, instruct), and they are not interchangeable parts. Adopt
+     one set completely — for agentic work the coding/precise one — and never
+     move a single value across sets. A `presence-penalty` from a general set
+     dropped into a coding set punishes repeated tokens, which is what code is
+     made of. Never `temp = 0` unless the card explicitly recommends greedy
+     decoding; the script refuses a bare `--extra temp=0` without
+     `--zero-temp-ok`.
    - **Exception: OCR/document-parsing models** (section name matches "ocr") keep the
      old conservative defaults (`f16` KV, no parallel/cache-reuse/speculative-
      decoding, no zero-temp guard) — one-shot greedy grounding doesn't benefit
      from (and isn't a creativity trade-off for) agentic throughput tuning.
    - See the decision reference below for exactly which keys this covers.
-3. **Newest-feature detection** — every agentic-tuned key above (KV-cache
-   quant type, `cache-reuse`, `reasoning-format`, `spec-type`) is gated on the
-   **installed** `llama-server --help`/`--version` actually supporting it, with
-   a graceful fallback + note if the build is older/narrower. Never hardcode a
-   flag set; re-probe every run, so `bootstrap.sh --force` immediately unlocks
-   better defaults next time.
+3. **Newest-feature detection** — this repo's llama.cpp is kept current, so the
+   installed build is the authority on what is possible, and the script must
+   never carry its own idea of the feature set. Every key above is gated on the
+   **installed** `llama-server --help`/`--version`, and the *values* are parsed
+   out of `--help` too, not listed here: the allowed `cache-type-k/v` types and
+   the `--spec-type` implementations both come from that output. A new release
+   that adds a speculator or a KV type therefore improves the next run without
+   an edit, and an older build degrades gracefully with a printed note.
+   If you find yourself about to hardcode a value that `--help` already states,
+   parse it instead.
+4. **Embedded chat template** — behavioural defaults live in the GGUF's own
+   Jinja template and can contradict the model card. Laguna-XS-2.1 advertises
+   interleaved reasoning as its headline feature while its template opens with
+   `enable_thinking | default(false)`; a preset that trusts the card runs it
+   with thinking off and nothing reports it. The script scans for this. Two
+   traps: the template sits *after* the tensor-name table, past the 100 MB mark
+   on a 40-layer MoE, so a short `strings` window finds nothing — and a missing
+   hit then reads like a negative result when it only means you looked in the
+   wrong place. Always confirm the template was seen before concluding anything
+   from its absence.
 
-The heavy lifting is in `scripts/recommend.sh` (deterministic). Your job is to
-run it, sanity-check the result, merge it, and verify.
+`scripts/recommend.sh` does the measuring and the mechanical decisions. It is
+not the judge: it cannot read a model card, it cannot weigh a 600 MiB margin
+against 32k more context, and it reports the template finding rather than acting
+on it. Run it, then decide those yourself — and if its output contradicts a
+measurement you took by hand, trust the measurement and fix the script.
 
 ## Preconditions
 
@@ -68,8 +111,10 @@ run it, sanity-check the result, merge it, and verify.
 
 ### 1. Identify the model + check whether a section already exists
 Accept a section name, a `.gguf` filename, or a full path. The section header in
-`models.ini` equals the GGUF filename (e.g. `[Qwen3.6-27B-IQ4_XS-mtp.gguf]`),
-matching the existing convention. If unsure which models exist:
+`models.ini` is the **bare model alias** clients pass in the OpenAI `model`
+field — the directory the GGUF lives in, e.g. `[Laguna-XS-2.1]`, not
+`[Laguna-XS-2.1-IQ4_XS.gguf]`. Getting this wrong creates a second, duplicate
+section for a model that is already configured. If unsure which models exist:
 `bash llama.cpp/server.sh --list`. It doesn't matter whether the model is brand
 new or already has a `[section]` in `models.ini` — the same command re-tunes an
 existing entry to the current hardware **and** the current agentic defaults
@@ -77,7 +122,7 @@ existing entry to the current hardware **and** the current agentic defaults
 
 ### 2. Inspect hardware + autosize (dry-run first)
 ```sh
-bash .claude/skills/llama-preset/scripts/recommend.sh "<model>"
+bash .opencode/skills/llama-preset/scripts/recommend.sh "<model>"
 ```
 This prints the installed `llama-server` version, the device table, model
 facts (size, MoE?, `n_layer`, `n_ctx_train`), the chosen device, the raw
@@ -111,7 +156,7 @@ Hardware tuning cannot know what the **publisher** recommends. Read the model
 card and fold in only the settings that are NOT hardware-derived.
 
 ```sh
-bash .claude/skills/llama-preset/scripts/recommend.sh "<model>" --hf-url
+bash .opencode/skills/llama-preset/scripts/recommend.sh "<model>" --hf-url
 ```
 This resolves the HuggingFace `repo_id`(s) from `models.list` (matching by
 filename or `dest_subdir`, so it still works when the local file was renamed)
@@ -137,6 +182,30 @@ and extract publisher guidance, e.g.:
   `yarn-*`) needed to go beyond the trained `n_ctx_train`.
 
 If you cannot confirm a value from the card, do **not** set it.
+
+### 3b. Pin down `ctx-size` by measurement, not by one probe
+The script reports a single fitted value. Before accepting it, probe the
+**neighbouring** points and record them — the choice is a margin decision, and
+a number without its neighbours cannot be reviewed:
+
+```sh
+M=~/.local/share/llama.cpp/models/<dir>/<file>.gguf
+for c in 131072 163840 196608 262144; do
+  printf 'ctx %-7s ' $c
+  llama-fit-params -m "$M" -ngl -1 -fa on -ctk q8_0 -ctv q8_0 -c $c -fitp on \
+    | awk '/^CUDA0|^Vulkan0/{printf "= %d MiB\n", $2+$3+$4}'
+done
+```
+
+Pick by remaining headroom, and write the alternatives into `AGENTS.md` so the
+next reader sees what was rejected and why. Roughly 1.5 GiB free has been the
+working target on a 24 GB card; below ~600 MiB is a gamble that assumes nothing
+else ever claims VRAM. Two caveats this repo has already hit:
+- `llama-fit-params` rejects `--spec-type`, so for a model with an MTP head the
+  reported total **excludes the drafter's context** and is a lower bound. Say so.
+- A Windows-host binary given a `/mnt/c/...` path prints its header and no data
+  line — a silent failure that reads exactly like "does not fit". If the memory
+  numbers come back empty, check the path form before believing the verdict.
 
 ### 4. Review before writing
 Read the `# source` comment on each emitted key. Prefer values marked
@@ -172,7 +241,7 @@ collides with a key the script tuned for this hardware/agentic-use is
 **refused** (reported on stderr), never silently overridden — exactly the rule
 "only set what the hardware/agentic step did not already set".
 ```sh
-bash .claude/skills/llama-preset/scripts/recommend.sh "<model>" --write \
+bash .opencode/skills/llama-preset/scripts/recommend.sh "<model>" --write \
   --extra temp=0.6 --extra top-p=0.95 --extra top-k=20
 ```
 `--write` is idempotent (replaces an existing same-named section, creates
@@ -187,11 +256,11 @@ bash llama.cpp/server.sh                 # router mode; watch the load log
 # in another shell:
 curl http://127.0.0.1:8081/v1/models
 ```
-If the server OOMs on the GPU, lower `n-gpu-layers`, raise `n-cpu-moe` (MoE), or
-drop `ctx-size` first; `cache-type-v` is already at its `q4_0` floor by default,
-so if still tight after that, shrink `ctx-size` further rather than dropping
-either KV type below its floor (that would undo the agentic quality/speed
-tuning) — re-verify after each change.
+If the server OOMs on the GPU, drop `ctx-size` first — that is the cheapest
+lever and the one this repo has always used. Do not reach for `n-cpu-moe`, and
+do not push a KV type below its floor; both trade generation throughput or
+quality for memory. Re-verify after each change, and record the number you
+ended up with plus the one that failed.
 
 ### 7. Summarize
 Report: model, chosen device + VRAM, final `n-gpu-layers` / `n-cpu-moe` /
@@ -215,17 +284,21 @@ Preset keys are `llama-server` long flags **without** the leading `--` (see
 | Discrete + integrated GPU present | pin `device = <discreteGPU>`; do **not** offload to the iGPU |
 | True multi-GPU (2+ discrete) | `tensor-split = a,b` and/or `main-gpu`, `split-mode = layer` |
 | Non-OCR model (**agentic default, K floor**) | `cache-type-k = q8_0` — never lower by default; K (attention keys) is more sensitive to quantization loss than V |
-| Non-OCR model (**agentic default, V floor**) | `cache-type-v = q4_0` — tolerates more aggressive quantization than K (especially with flash-attn); frees the most KV memory of any of these settings |
-| VRAM still tight after other adjustments | shrink `ctx-size` further — don't push either KV type below its floor |
+| Non-OCR model on **Vulkan** (V floor) | `cache-type-v = q4_0` — frees the most KV memory of any single setting |
+| Non-OCR model on **CUDA / anything else** | `cache-type-v = cache-type-k` — a mixed pair falls off the fused FlashAttention kernel (measured 86 -> 9 t/s generation); spend KV memory, not throughput |
+| VRAM still tight after other adjustments | shrink `ctx-size` further — don't push either KV type below its floor, and don't reach for `n-cpu-moe` |
+| MoE model, native ctx doesn't fit | shrink `ctx-size` until it fits fully on the GPU; `n-cpu-moe` only with `--allow-cpu-moe` (PCIe round trip in the generation path) |
 | Non-OCR model (**agentic default**) | `parallel = 1` — one active conversation gets the full `ctx-size` and full throughput instead of being split across slots |
 | Non-OCR model (**agentic default**, if the build supports `--cache-reuse`) | `cache-reuse = 256` — reuses cached KV for repeated prefixes (system prompt, tool schemas) across turns |
 | Non-OCR model (**newest-feature default**, if the build supports `--reasoning-format`) | `reasoning-format = auto` — guarantees `reasoning_content`/tool-call separation regardless of the build's own default |
-| Model has an MTP head (self-speculative HF "-MTP-" repo, or a sibling `mtp-*.gguf` file), and the build supports `--spec-type` | `spec-type = draft-mtp` (+ `model-draft = <path>` for the sibling-file case), `spec-draft-n-max = 4` — lossless speedup, auto-detected |
+| Model has an MTP head (self-speculative HF "-MTP-" repo, or a sibling `mtp-*.gguf`), build supports `--spec-type` | `spec-type = draft-mtp` (+ `model-draft = <path>` for the sibling case), `spec-draft-n-max = 4` |
+| **Any** model, if `--help` lists `ngram-mod` | chain it in: `spec-type = draft-mtp,ngram-mod` or bare `ngram-mod`. No draft model, no VRAM, lossless. Speed effect unmeasured on this repo's hardware — say so |
+| Embedded template sets `enable_thinking \| default(false)` on an agentic model | `reasoning = on` explicitly; don't trust `--reasoning auto`. Fallback: `chat-template-kwargs = {"enable_thinking": true}` |
 | **OCR / document-parsing model** (section name matches "ocr", or `--ocr`) | keep conservative `cache-type-k/v = f16`, no `parallel`/`cache-reuse`/`spec-type`/`reasoning-format`; deterministic sampling (`temp=0`, `top-k=1`) via vendor `--extra` — no `--zero-temp-ok` needed, exempt from the guard |
-| Non-OCR model, vendor card sampling (step 3) | prefer the model card's lower/more deterministic temp option; `temp = 0` requires `--zero-temp-ok` to confirm the card actually recommends greedy decoding |
+| Non-OCR model, vendor card sampling (step 3) | adopt ONE published set whole (the coding/precise one for agentic use); never mix values across sets; `temp = 0` requires `--zero-temp-ok` |
 | Installed `llama-server` lacks a newer flag (`--cache-reuse`, `--reasoning-format`, `--spec-type`, or a KV quant type) | skip that key, print a note, fall back gracefully (e.g. `cache-type-v` falls back from `q4_0` to `q8_0`) — never emit a flag the build doesn't support |
 | No usable GPU (Vulkan empty) | `n-gpu-layers = 0`; runs on CPU, set `threads` ≈ physical cores |
-| Always | `flash-attn = auto`, `jinja = true` (needed for tool-calling/reasoning) |
+| Always | `flash-attn = on` (the matched-KV decision above assumes the fused kernel), `jinja = true` (needed for tool-calling/reasoning) |
 | Vendor/model card (step 3) | sampling `temp`/`top-p`/`top-k`/`min-p`/`repeat-penalty`, `chat-template[-file]`, `rope-scaling`/`yarn-*` — via `--extra` |
 
 Three classes of settings:
@@ -290,14 +363,30 @@ Notes:
   `cache-reuse`, `reasoning-format`, speculative decoding, the zero-temp guard)
   to OCR/document-parsing models — verify `--ocr` was auto-detected or forced
   for those.
+- Never emit a mixed `cache-type-k`/`cache-type-v` pair on a non-Vulkan backend
+  without saying why; the fused-FlashAttention collapse is measured, not
+  theoretical.
+- `--write` must never delete a key it does not manage. Sampling, `reasoning`
+  and `cache-ram` are carried over and reported; if you apply the block by hand
+  instead, carry them yourself.
+- Preserve section order in `models.ini` — it is maintained by hand.
+- Both preset files are edited on a Windows host too and may carry CRLF. Strip
+  CR before matching section headers or sourcing config, or the script will
+  report an existing section as new and append a duplicate.
 
 ## Files
 
-- `scripts/recommend.sh` — probe hardware + the installed llama-server's
-  supported features (`--help`/`--version`) + apply agentic quality/speed
-  tuning (KV-cache quant floors `q8_0`/`q4_0`, `parallel`, `cache-reuse`,
-  `reasoning-format`, auto-detected MTP speculative decoding, a temp=0 guard —
-  each gated on build support, skipped for OCR models) + look up the model
-  card (`--hf-url`) + merge one `models.ini` section, accepting vendor settings
-  via `--extra KEY=VALUE` (hardware/agentic-owned keys are refused) + print an
+- `scripts/recommend.sh` — probes the hardware and the installed
+  llama-server (`--help`/`--version`, including the *allowed values* for
+  `cache-type-k/v` and `--spec-type`), scans the GGUF's embedded chat template,
+  applies the agentic tuning above (backend-dependent KV pair, `parallel`,
+  `cache-reuse`, `reasoning-format`, speculative decoding incl. `ngram-mod`, the
+  temp=0 guard — each gated on build support, skipped for OCR models), resolves
+  the model card (`--hf-url`), and merges one `models.ini` section in place,
+  accepting vendor settings via `--extra KEY=VALUE` (hardware/agentic-owned keys
+  are refused) while carrying over keys it does not manage. Prints an
   OPTIMIZATION DIFF against any pre-existing section.
+
+  Runs on both hosts: it resolves `llama-server` or `llama-server.exe`, strips
+  CR from sourced config, and converts POSIX paths to Windows form when the
+  binary is an `.exe` — that last one was a silent-failure bug, not a nicety.
