@@ -1034,7 +1034,7 @@ merge_into_preset() {
     #     those are carried over, see compute_carry.
     awk -v sec="[$SECTION]" -v repl="$FINAL_BLOCK" '
         { line=$0; sub(/\r$/,"",line) }
-        line==sec && !done { print repl; skip=1; done=1; next }
+        line==sec && !done { print repl; print ""; skip=1; done=1; next }
         skip && line ~ /^\[/ { skip=0 }
         !skip { print }
         END { if (!done) printf "\n%s\n", repl }
