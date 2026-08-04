@@ -13,6 +13,7 @@
 unsloth/Qwen3.6-27B-MTP-GGUF          | Qwen3.6-27B-IQ4_XS.gguf            | Qwen3.6-27B
 unsloth/Qwen3.6-35B-A3B-MTP-GGUF      | Qwen3.6-35B-A3B-UD-IQ4_XS.gguf     | Qwen3.6-35B-A3B
 unsloth/gemma-4-26B-A4B-it-qat-GGUF   | gemma-4-26B-A4B-it-qat-UD-Q4_K_XL.gguf | gemma-4-26B-A4B
+unsloth/gemma-4-26B-A4B-it-qat-GGUF   | mtp-gemma-4-26B-A4B-it.gguf        | gemma-4-26B-A4B
 unsloth/gemma-4-31B-it-qat-GGUF       | gemma-4-31B-it-qat-UD-Q4_K_XL.gguf | gemma-4-31B
 unsloth/gemma-4-31B-it-qat-GGUF       | mtp-gemma-4-31B-it.gguf            | gemma-4-31B
 bartowski/Laguna-XS-2.1-GGUF          | Laguna-XS-2.1-IQ4_XS.gguf           | Laguna-XS-2.1

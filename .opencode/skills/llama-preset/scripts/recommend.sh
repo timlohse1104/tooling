@@ -372,10 +372,16 @@ resolve_model_path() {
     local in="$1"
     if [[ -f "$in" ]]; then printf '%s' "$in"; return; fi
     local -a hits=()
+    # A sibling mtp-*.gguf is a drafter, never a target — this same script looks
+    # for one a few steps later. Counting it as a match made every model that
+    # actually has an MTP drafter (gemma-4-26B-A4B, gemma-4-31B) unreachable by
+    # its alias: "Ambiguous model". Excluded unless asked for by exact name.
+    local -a drop=(-not -name 'mtp-*.gguf')
+    [[ "$(basename "$in")" == mtp-* ]] && drop=()
     # exact filename match first, then fuzzy contains (-L: follow symlinked dirs)
-    mapfile -t hits < <(find -L "$LLAMA_MODELS_DIR" -type f -name "$in" 2>/dev/null)
-    [[ ${#hits[@]} -eq 0 ]] && mapfile -t hits < <(find -L "$LLAMA_MODELS_DIR" -type f -name "${in%.gguf}.gguf" 2>/dev/null)
-    [[ ${#hits[@]} -eq 0 ]] && mapfile -t hits < <(find -L "$LLAMA_MODELS_DIR" -type f -name "*${in%.gguf}*.gguf" 2>/dev/null)
+    mapfile -t hits < <(find -L "$LLAMA_MODELS_DIR" -type f -name "$in" "${drop[@]}" 2>/dev/null)
+    [[ ${#hits[@]} -eq 0 ]] && mapfile -t hits < <(find -L "$LLAMA_MODELS_DIR" -type f -name "${in%.gguf}.gguf" "${drop[@]}" 2>/dev/null)
+    [[ ${#hits[@]} -eq 0 ]] && mapfile -t hits < <(find -L "$LLAMA_MODELS_DIR" -type f -name "*${in%.gguf}*.gguf" "${drop[@]}" 2>/dev/null)
     if [[ ${#hits[@]} -eq 0 ]]; then
         err "No GGUF matching '$in' under $LLAMA_MODELS_DIR. Download it first (./download-model.sh)."
     elif [[ ${#hits[@]} -gt 1 ]]; then

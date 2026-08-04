@@ -9,13 +9,9 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
-if [[ -f "$SCRIPT_DIR/config.env" ]]; then
-    # shellcheck source=/dev/null
-    source "$SCRIPT_DIR/config.env"
-elif [[ -f "$SCRIPT_DIR/config.env.example" ]]; then
-    # shellcheck source=/dev/null
-    source "$SCRIPT_DIR/config.env.example"
-fi
+# shellcheck source=config-load.sh
+source "$SCRIPT_DIR/config-load.sh"
+_llama_load_config "$SCRIPT_DIR"
 
 LLAMA_MODELS_DIR="${LLAMA_MODELS_DIR:-$HOME/.local/share/llama.cpp/models}"
 MANIFEST="$SCRIPT_DIR/models.list"

@@ -11,14 +11,9 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 # --- load config -----------------------------------------------------------
-if [[ -f "$SCRIPT_DIR/config.env" ]]; then
-    # shellcheck source=/dev/null
-    source "$SCRIPT_DIR/config.env"
-elif [[ -f "$SCRIPT_DIR/config.env.example" ]]; then
-    printf 'config.env not found — using defaults from config.env.example\n' >&2
-    # shellcheck source=/dev/null
-    source "$SCRIPT_DIR/config.env.example"
-fi
+# shellcheck source=config-load.sh
+source "$SCRIPT_DIR/config-load.sh"
+_llama_load_config "$SCRIPT_DIR"
 
 LLAMA_VERSION="${LLAMA_VERSION:-latest}"
 VENDOR_DIR="$SCRIPT_DIR/vendor/llama.cpp"
