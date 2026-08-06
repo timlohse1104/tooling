@@ -57,9 +57,13 @@
         "Laguna-XS-2.1": {
           "name": "Laguna XS 2.1 33B-A3B Agentic Coder",
           "modalities": {"input": ["text"], "output": ["text"]}
+        },
+        "Ternary-Bonsai-27B": {
+          "name": "Ternary Bonsai 27B (1.71 bpw)",
+          "modalities": {"input": ["text"], "output": ["text"]}
         }
       },
-      "whitelist": ["Qwen3.6-27B", "Qwen3.6-35B-A3B", "gemma-4-26B-A4B", "ornith-1.0-9b", "ornith-1.0-35b", "Qwen-AgentWorld-35B-A3B", "gemma-4-31B", "Laguna-XS-2.1"]
+      "whitelist": ["Qwen3.6-27B", "Qwen3.6-35B-A3B", "gemma-4-26B-A4B", "ornith-1.0-9b", "ornith-1.0-35b", "Qwen-AgentWorld-35B-A3B", "gemma-4-31B", "Laguna-XS-2.1", "Ternary-Bonsai-27B"]
     },
     "hermine": {
       "npm": "@ai-sdk/openai-compatible",
@@ -100,9 +104,13 @@
         "Laguna-XS-2.1": {
           "name": "Laguna XS 2.1 33B-A3B Agentic Coder",
           "modalities": {"input": ["text"], "output": ["text"]}
+        },
+        "Ternary-Bonsai-27B": {
+          "name": "Ternary Bonsai 27B (1.71 bpw)",
+          "modalities": {"input": ["text"], "output": ["text"]}
         }
       },
-      "whitelist": ["Qwen3.6-27B", "Qwen3.6-35B-A3B", "gemma-4-26B-A4B", "ornith-1.0-9b", "ornith-1.0-35b", "Qwen-AgentWorld-35B-A3B", "gemma-4-31B", "Laguna-XS-2.1"]
+      "whitelist": ["Qwen3.6-27B", "Qwen3.6-35B-A3B", "gemma-4-26B-A4B", "ornith-1.0-9b", "ornith-1.0-35b", "Qwen-AgentWorld-35B-A3B", "gemma-4-31B", "Laguna-XS-2.1", "Ternary-Bonsai-27B"]
     },
     "openrouter": {
       "options": {

@@ -10,16 +10,18 @@
 # Downloads land in $LLAMA_MODELS_DIR (OUTSIDE this repo) and are never committed.
 
 # --- Your models -----------------------------------------------------------
-unsloth/Qwen3.6-27B-MTP-GGUF          | Qwen3.6-27B-IQ4_XS.gguf            | Qwen3.6-27B
-unsloth/Qwen3.6-35B-A3B-MTP-GGUF      | Qwen3.6-35B-A3B-UD-IQ4_XS.gguf     | Qwen3.6-35B-A3B
-unsloth/gemma-4-26B-A4B-it-qat-GGUF   | gemma-4-26B-A4B-it-qat-UD-Q4_K_XL.gguf | gemma-4-26B-A4B
-unsloth/gemma-4-26B-A4B-it-qat-GGUF   | mtp-gemma-4-26B-A4B-it.gguf        | gemma-4-26B-A4B
-unsloth/gemma-4-31B-it-qat-GGUF       | gemma-4-31B-it-qat-UD-Q4_K_XL.gguf | gemma-4-31B
-unsloth/gemma-4-31B-it-qat-GGUF       | mtp-gemma-4-31B-it.gguf            | gemma-4-31B
-bartowski/Laguna-XS-2.1-GGUF          | Laguna-XS-2.1-IQ4_XS.gguf           | Laguna-XS-2.1
-unsloth/Qwen-AgentWorld-35B-A3B-GGUF  | Qwen-AgentWorld-35B-A3B-UD-IQ4_XS.gguf | Qwen-AgentWorld-35B-A3B
-deepreinforce-ai/Ornith-1.0-9B-GGUF   | ornith-1.0-9b-Q8_0.gguf      | Ornith-1.0-9B
-deepreinforce-ai/Ornith-1.0-35B-GGUF  | ornith-1.0-35b-Q4_K_M.gguf   | Ornith-1.0-35B
+#unsloth/Qwen3.6-27B-MTP-GGUF          | Qwen3.6-27B-IQ4_XS.gguf            | Qwen3.6-27B
+#unsloth/Qwen3.6-35B-A3B-MTP-GGUF      | Qwen3.6-35B-A3B-UD-IQ4_XS.gguf     | Qwen3.6-35B-A3B
+#unsloth/gemma-4-26B-A4B-it-qat-GGUF   | gemma-4-26B-A4B-it-qat-UD-Q4_K_XL.gguf | gemma-4-26B-A4B
+#unsloth/gemma-4-26B-A4B-it-qat-GGUF   | mtp-gemma-4-26B-A4B-it.gguf        | gemma-4-26B-A4B
+#unsloth/gemma-4-31B-it-qat-GGUF       | gemma-4-31B-it-qat-UD-Q4_K_XL.gguf | gemma-4-31B
+#unsloth/gemma-4-31B-it-qat-GGUF       | mtp-gemma-4-31B-it.gguf            | gemma-4-31B
+#bartowski/Laguna-XS-2.1-GGUF          | Laguna-XS-2.1-IQ4_XS.gguf           | Laguna-XS-2.1
+#unsloth/Qwen-AgentWorld-35B-A3B-GGUF  | Qwen-AgentWorld-35B-A3B-UD-IQ4_XS.gguf | Qwen-AgentWorld-35B-A3B
+#deepreinforce-ai/Ornith-1.0-9B-GGUF   | ornith-1.0-9b-Q8_0.gguf      | Ornith-1.0-9B
+#deepreinforce-ai/Ornith-1.0-35B-GGUF  | ornith-1.0-35b-Q4_K_M.gguf   | Ornith-1.0-35B
+prism-ml/Ternary-Bonsai-27B-gguf      | Ternary-Bonsai-27B-Q2_g64.gguf      | Ternary-Bonsai-27B
+prism-ml/Ternary-Bonsai-27B-gguf      | Ternary-Bonsai-27B-dspark-Q4_1.gguf | Ternary-Bonsai-27B
 
 # --- Optional: Qwen fixed chat template (referenced by presets) ------------
 # froggeric/Qwen-Fixed-Chat-Templates | chat_template.jinja | ../templates

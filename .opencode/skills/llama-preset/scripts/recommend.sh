@@ -372,12 +372,26 @@ resolve_model_path() {
     local in="$1"
     if [[ -f "$in" ]]; then printf '%s' "$in"; return; fi
     local -a hits=()
-    # A sibling mtp-*.gguf is a drafter, never a target — this same script looks
-    # for one a few steps later. Counting it as a match made every model that
-    # actually has an MTP drafter (gemma-4-26B-A4B, gemma-4-31B) unreachable by
-    # its alias: "Ambiguous model". Excluded unless asked for by exact name.
-    local -a drop=(-not -iname 'mtp-*.gguf')
-    [[ "$(basename "$in")" == [Mm][Tt][Pp]-* ]] && drop=()
+    # Sibling files that are never a serving target: speculative-decoding
+    # drafters and vision projectors. Counting them as matches made every model
+    # that actually ships one unreachable by its alias ("Ambiguous model") —
+    # first seen with mtp-*.gguf (gemma-4-26B-A4B, gemma-4-31B), then again with
+    # Ternary-Bonsai-27B-dspark-Q4_1.gguf, which no mtp- pattern would catch.
+    # The markers track the draft-* families this build's --spec-type lists
+    # (simple/eagle3/mtp/dflash/dspark); naming is vendor convention, not a
+    # standard, so this stays a heuristic with an escape hatch: ask for a
+    # drafter by its exact filename and the filter is dropped.
+    local -a drop=()
+    local marker
+    for marker in mtp dspark dflash eagle mmproj; do
+        drop+=(-not -iname "*${marker}*.gguf")
+    done
+    local base; base="$(basename "$in")"
+    shopt -s nocasematch
+    for marker in mtp dspark dflash eagle mmproj; do
+        [[ "$base" == *"$marker"* ]] && { drop=(); break; }
+    done
+    shopt -u nocasematch
     # Case-insensitive on purpose: a section name is the directory (Ornith-1.0-9B)
     # while the GGUF inside it may be cased differently (ornith-1.0-9b-Q8_0.gguf).
     # With -name both Ornith models were unresolvable by alias.
