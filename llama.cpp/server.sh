@@ -52,9 +52,24 @@ maybe_auto_update() {
 # --- locate binary (only when actually serving) ----------------------------
 BIN=""
 resolve_bin() {
-    BIN="$(find "$SCRIPT_DIR/vendor" -name llama-server -type f 2>/dev/null | head -n1)"
+    # -L: vendor/ or a parent may be a symlink. Prefer the extensionless Linux
+    # binary, then the Windows .exe — on the WSL/Windows host vendor/ holds only
+    # *.exe, and without this fallback serving fails there while --list works.
+    BIN="$(find -L "$SCRIPT_DIR/vendor" -name llama-server -type f 2>/dev/null | head -n1)"
+    [[ -n "$BIN" ]] || BIN="$(find -L "$SCRIPT_DIR/vendor" -name llama-server.exe -type f 2>/dev/null | head -n1)"
     [[ -n "$BIN" ]] || { printf 'llama-server not found. Run ./bootstrap.sh first.\n' >&2; exit 1; }
     export LD_LIBRARY_PATH="$(dirname "$BIN"):${LD_LIBRARY_PATH:-}"
+}
+
+# A Windows llama-server.exe cannot resolve /mnt/c/... — it needs C:/... back.
+# config-load.sh deliberately hands bash the POSIX form (find/-f tests need it),
+# so every path given to the .exe has to be converted at the call site.
+host_path() {
+    if [[ "$BIN" == *.exe ]] && command -v wslpath >/dev/null 2>&1; then
+        wslpath -m "$1" 2>/dev/null || printf '%s' "$1"
+    else
+        printf '%s' "$1"
+    fi
 }
 
 physical_cores() {
@@ -92,8 +107,8 @@ run_router() {
     exec "$BIN" \
         --host "$LLAMA_HOST" \
         --port "$LLAMA_PORT" \
-        --models-dir "$LLAMA_MODELS_DIR" \
-        --models-preset "$preset" \
+        --models-dir "$(host_path "$LLAMA_MODELS_DIR")" \
+        --models-preset "$(host_path "$preset")" \
         --models-max "$LLAMA_MODELS_MAX"
 }
 
@@ -106,7 +121,7 @@ run_single() {
     local -a args=(
         --host "$LLAMA_HOST"
         --port "$LLAMA_PORT"
-        --model "$model"
+        --model "$(host_path "$model")"
         --alias "$(basename "$model")"
         --threads "$threads"
         --n-gpu-layers "$LLAMA_NGL"
