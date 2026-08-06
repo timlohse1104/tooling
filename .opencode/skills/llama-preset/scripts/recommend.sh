@@ -376,12 +376,15 @@ resolve_model_path() {
     # for one a few steps later. Counting it as a match made every model that
     # actually has an MTP drafter (gemma-4-26B-A4B, gemma-4-31B) unreachable by
     # its alias: "Ambiguous model". Excluded unless asked for by exact name.
-    local -a drop=(-not -name 'mtp-*.gguf')
-    [[ "$(basename "$in")" == mtp-* ]] && drop=()
+    local -a drop=(-not -iname 'mtp-*.gguf')
+    [[ "$(basename "$in")" == [Mm][Tt][Pp]-* ]] && drop=()
+    # Case-insensitive on purpose: a section name is the directory (Ornith-1.0-9B)
+    # while the GGUF inside it may be cased differently (ornith-1.0-9b-Q8_0.gguf).
+    # With -name both Ornith models were unresolvable by alias.
     # exact filename match first, then fuzzy contains (-L: follow symlinked dirs)
-    mapfile -t hits < <(find -L "$LLAMA_MODELS_DIR" -type f -name "$in" "${drop[@]}" 2>/dev/null)
-    [[ ${#hits[@]} -eq 0 ]] && mapfile -t hits < <(find -L "$LLAMA_MODELS_DIR" -type f -name "${in%.gguf}.gguf" "${drop[@]}" 2>/dev/null)
-    [[ ${#hits[@]} -eq 0 ]] && mapfile -t hits < <(find -L "$LLAMA_MODELS_DIR" -type f -name "*${in%.gguf}*.gguf" "${drop[@]}" 2>/dev/null)
+    mapfile -t hits < <(find -L "$LLAMA_MODELS_DIR" -type f -iname "$in" "${drop[@]}" 2>/dev/null)
+    [[ ${#hits[@]} -eq 0 ]] && mapfile -t hits < <(find -L "$LLAMA_MODELS_DIR" -type f -iname "${in%.gguf}.gguf" "${drop[@]}" 2>/dev/null)
+    [[ ${#hits[@]} -eq 0 ]] && mapfile -t hits < <(find -L "$LLAMA_MODELS_DIR" -type f -iname "*${in%.gguf}*.gguf" "${drop[@]}" 2>/dev/null)
     if [[ ${#hits[@]} -eq 0 ]]; then
         err "No GGUF matching '$in' under $LLAMA_MODELS_DIR. Download it first (./download-model.sh)."
     elif [[ ${#hits[@]} -gt 1 ]]; then
